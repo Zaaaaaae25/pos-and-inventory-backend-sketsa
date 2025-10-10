@@ -1,0 +1,28 @@
+/// ========== PACKAGES & INGREDIENT_PACKAGES ==========
+model Package {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  description String?
+
+  supplierProducts   SupplierProduct[]
+  ingredientPackages IngredientPackage[]
+
+  @@map("packages")
+}
+
+model IngredientPackage {
+  id           Int     @id @default(autoincrement())
+  ingredientId Int     @map("ingredient_id")
+  packageId    Int     @map("package_id")
+  qty          Decimal @db.Decimal(12, 2)
+  price        Decimal @db.Decimal(12, 2)
+
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  package    Package    @relation(fields: [packageId], references: [id], onDelete: Restrict)
+
+  purchaseOrderItems PurchaseOrderItem[]
+  goodsReceiptItems  GoodsReceiptItem[]
+
+  @@unique([ingredientId, packageId])
+  @@map("ingredient_packages")
+}

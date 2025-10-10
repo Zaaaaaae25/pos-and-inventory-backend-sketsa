@@ -1,0 +1,61 @@
+/// ========== SUPPLIERS & PURCHASING ==========
+model Supplier {
+  id          Int     @id @default(autoincrement())
+  name        String
+  contactName String? @map("contact_name")
+  phone       String?
+  email       String?
+  address     String?
+
+  products       SupplierProduct[]
+  purchaseOrders PurchaseOrder[]
+
+  @@map("suppliers")
+}
+
+model SupplierProduct {
+  id           Int     @id @default(autoincrement())
+  supplierId   Int     @map("supplier_id")
+  ingredientId Int     @map("ingredient_id")
+  packageId    Int     @map("package_id")
+  qty          Decimal @db.Decimal(12, 2)
+  price        Decimal @db.Decimal(12, 2)
+  leadTime     Int?
+  isActive     Boolean @default(true) @map("is_active")
+
+  supplier   Supplier   @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  package    Package    @relation(fields: [packageId], references: [id], onDelete: Restrict)
+
+  @@unique([supplierId, ingredientId, packageId])
+  @@map("supplier_products")
+}
+
+model PurchaseOrder {
+  id         Int      @id @default(autoincrement())
+  outletId   Int      @map("outlet_id")
+  supplierId Int      @map("supplier_id")
+  status     String   @default("draft")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+
+  items         PurchaseOrderItem[]
+  goodsReceipts GoodsReceipt[]
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id                  Int     @id @default(autoincrement())
+  purchaseOrderId     Int     @map("purchase_order_id")
+  ingredientPackageId Int     @map("ingredient_package_id")
+  qty                 Decimal @db.Decimal(12, 2)
+  price               Decimal @db.Decimal(12, 2)
+
+  purchaseOrder     PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  ingredientPackage IngredientPackage @relation(fields: [ingredientPackageId], references: [id], onDelete: Restrict)
+
+  @@map("purchase_order_items")
+}

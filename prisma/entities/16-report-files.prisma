@@ -1,0 +1,15 @@
+/// ========== REPORT FILES ==========
+model ReportFile {
+  id          Int      @id @default(autoincrement())
+  reportType  String   @map("report_type")
+  reportScope String   @map("report_scope")
+  reportDate  DateTime? @map("report_date")
+  outletId    Int?     @map("outlet_id")
+  fileName    String   @map("file_name")
+  filePath    String   @map("file_path")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+
+  @@map("report_files")
+}

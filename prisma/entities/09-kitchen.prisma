@@ -1,0 +1,13 @@
+/// ========== KITCHEN ==========
+model KitchenOrder {
+  id                Int      @id @default(autoincrement())
+  transactionItemId Int      @map("transaction_item_id")
+  status            String   @default("waiting")
+  startedAt         DateTime? @map("started_at")
+  finishedAt        DateTime? @map("finished_at")
+  note              String?
+
+  transactionItem TransactionItem @relation(fields: [transactionItemId], references: [id], onDelete: Cascade)
+
+  @@map("kitchen_orders")
+}

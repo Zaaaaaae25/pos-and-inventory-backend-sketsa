@@ -1,0 +1,12 @@
+// This file defines the Prisma generator and datasource configuration.
+// Run `npm run prisma:build` to combine this configuration with the entity
+// definitions located in `prisma/entities` into `prisma/schema.prisma`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

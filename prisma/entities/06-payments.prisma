@@ -1,0 +1,11 @@
+/// ========== PAYMENTS ==========
+model PaymentMethod {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true) @map("is_active")
+
+  transactions Transaction[]
+
+  @@map("payment_methods")
+}

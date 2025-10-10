@@ -1,0 +1,40 @@
+/// ========== MENUS ==========
+model Menu {
+  id          Int      @id @default(autoincrement())
+  outletId    Int?     @map("outlet_id")
+  name        String
+  category    String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+
+  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  variants MenuVariant[]
+  prices   MenuPrice[]
+  recipes  Recipe[]
+  transactionItems TransactionItem[]
+  promotionItems   PromotionItem[]
+
+  @@map("menus")
+}
+
+model MenuVariant {
+  id     Int @id @default(autoincrement())
+  menuId Int @map("menu_id")
+  name   String
+
+  menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  transactionItemVariants TransactionItemVariant[]
+
+  @@map("menu_variants")
+}
+
+model MenuPrice {
+  id        Int      @id @default(autoincrement())
+  menuId    Int      @map("menu_id")
+  price     Decimal  @db.Decimal(12, 2)
+  validFrom DateTime @map("valid_from")
+
+  menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@map("menu_prices")
+}
