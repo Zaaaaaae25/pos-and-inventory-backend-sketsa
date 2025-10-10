@@ -1,4 +1,4 @@
-import express from 'express';
+import express from '../../../Infrastructures/WebServer/ExpressShim.js';
 import adapt from '../ExpressAdapter.js';
 
 export default function registerUserRoutes(app, { controller }) {

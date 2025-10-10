@@ -1,4 +1,14 @@
-import dotenv from 'dotenv';
+import { createRequire } from 'node:module';
+
+let dotenv;
+
+try {
+  const require = createRequire(import.meta.url);
+  // eslint-disable-next-line import/no-dynamic-require, global-require
+  dotenv = require('dotenv');
+} catch (error) {
+  dotenv = { config() {} };
+}
 
 dotenv.config();
 

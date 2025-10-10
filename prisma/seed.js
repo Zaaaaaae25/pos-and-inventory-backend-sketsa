@@ -1,7 +1,149 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { hashSecret } from '../src/Commons/Utils/HashPassword.js';
 
 const prisma = new PrismaClient();
+
+function envOrDefault(key, fallback) {
+  const raw = process.env[key];
+  if (typeof raw === 'undefined' || raw === null) {
+    return fallback;
+  }
+
+  const trimmed = raw.trim();
+  return trimmed === '' ? fallback : trimmed;
+}
+
+function normalizeAccountSeed(account) {
+  if (!account || typeof account !== 'object') {
+    return null;
+  }
+
+  const normalized = {
+    name: account.name,
+    role: account.role ? String(account.role).trim().toLowerCase() : undefined,
+  };
+
+  if (!normalized.name || !normalized.role) {
+    return null;
+  }
+
+  if (account.email) {
+    normalized.email = String(account.email).trim().toLowerCase();
+  }
+
+  if (account.password) {
+    normalized.password = String(account.password);
+  }
+
+  if (account.pin) {
+    normalized.pin = String(account.pin);
+  }
+
+  return normalized;
+}
+
+function normalizeNullableString(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed === '' ? null : trimmed;
+}
+
+function normalizeOutletSeed(outlet) {
+  if (!outlet || typeof outlet !== 'object') {
+    return null;
+  }
+
+  const normalizedName = normalizeNullableString(outlet.name ?? '');
+  if (!normalizedName) {
+    return null;
+  }
+
+  const normalized = {
+    name: normalizedName,
+    isActive:
+      typeof outlet.isActive === 'boolean' ? outlet.isActive : outlet.isActive !== false,
+  };
+
+  const address = normalizeNullableString(outlet.address ?? '');
+  const phone = normalizeNullableString(outlet.phone ?? '');
+
+  if (address !== null) {
+    normalized.address = address;
+  }
+
+  if (phone !== null) {
+    normalized.phone = phone;
+  }
+
+  return normalized;
+}
+
+function buildOutletPersistenceData(outlet) {
+  const data = {
+    name: outlet.name,
+    isActive: typeof outlet.isActive === 'boolean' ? outlet.isActive : true,
+  };
+
+  if (Object.prototype.hasOwnProperty.call(outlet, 'address')) {
+    data.address = outlet.address ?? null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(outlet, 'phone')) {
+    data.phone = outlet.phone ?? null;
+  }
+
+  return data;
+}
+
+function parseAdditionalAccountSeeds() {
+  const raw = envOrDefault('SEED_ADDITIONAL_ACCOUNTS');
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      // eslint-disable-next-line no-console
+      console.warn('SEED_ADDITIONAL_ACCOUNTS must be a JSON array of account objects');
+      return [];
+    }
+
+    return parsed.map(normalizeAccountSeed).filter(Boolean);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('Failed to parse SEED_ADDITIONAL_ACCOUNTS JSON:', error.message);
+    return [];
+  }
+}
+
+function parseAdditionalOutletSeeds() {
+  const raw = envOrDefault('SEED_ADDITIONAL_OUTLETS');
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      // eslint-disable-next-line no-console
+      console.warn('SEED_ADDITIONAL_OUTLETS must be a JSON array of outlet objects');
+      return [];
+    }
+
+    return parsed.map(normalizeOutletSeed).filter(Boolean);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('Failed to parse SEED_ADDITIONAL_OUTLETS JSON:', error.message);
+    return [];
+  }
+}
 
 const permissionCatalog = [
   {
@@ -132,33 +274,63 @@ const roleDefinitions = [
   },
 ];
 
-const accountSeeds = [
-  {
-    name: 'F&B Owner',
+const defaultOutletSeeds = [
+  normalizeOutletSeed({
+    name: envOrDefault('SEED_OUTLET_NAME', 'Main Outlet'),
+    address: envOrDefault('SEED_OUTLET_ADDRESS', ''),
+    phone: envOrDefault('SEED_OUTLET_PHONE', ''),
+    isActive: true,
+  }),
+].filter(Boolean);
+
+const outletSeeds = [...defaultOutletSeeds, ...parseAdditionalOutletSeeds()];
+
+const defaultAccountSeeds = [
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_OWNER_NAME', 'F&B Owner'),
     role: 'owner',
-    email: 'owner@example.com',
-    password: 'OwnerPass123!',
-  },
-  {
-    name: 'Outlet Manager',
+    email: envOrDefault('SEED_OWNER_EMAIL', 'owner@example.com'),
+    password: envOrDefault('SEED_OWNER_PASSWORD', 'OwnerPass123!'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_MANAGER_NAME', 'Outlet Manager'),
     role: 'manager',
-    email: 'manager@example.com',
-    password: 'ManagerPass123!',
-  },
-  {
-    name: 'Shift Supervisor',
+    email: envOrDefault('SEED_MANAGER_EMAIL', 'manager@example.com'),
+    password: envOrDefault('SEED_MANAGER_PASSWORD', 'ManagerPass123!'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_SUPERVISOR_NAME', 'Shift Supervisor'),
     role: 'supervisor',
-    email: 'supervisor@example.com',
-    password: 'SupervisorPass123!',
-  },
-  {
-    name: 'Cashier A',
+    email: envOrDefault('SEED_SUPERVISOR_EMAIL', 'supervisor@example.com'),
+    password: envOrDefault('SEED_SUPERVISOR_PASSWORD', 'SupervisorPass123!'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_CASHIER_NAME', 'Cashier A'),
     role: 'cashier',
-    pin: '123456',
-  },
-];
+    pin: envOrDefault('SEED_CASHIER_PIN', '123456'),
+  }),
+].filter(Boolean);
+
+const accountSeeds = [...defaultAccountSeeds, ...parseAdditionalAccountSeeds()];
 
 async function main() {
+  for (const outlet of outletSeeds) {
+    const existing = await prisma.outlet.findFirst({
+      where: { name: outlet.name },
+    });
+
+    if (existing) {
+      const updateData = buildOutletPersistenceData({ ...existing, ...outlet });
+      await prisma.outlet.update({
+        where: { id: existing.id },
+        data: updateData,
+      });
+    } else {
+      const createData = buildOutletPersistenceData(outlet);
+      await prisma.outlet.create({ data: createData });
+    }
+  }
+
   const permissionRecords = {};
 
   for (const permission of permissionCatalog) {
@@ -235,20 +407,23 @@ async function main() {
       }
     }
 
-    await prisma.userRole.upsert({
+    const existingUserRole = await prisma.userRole.findFirst({
       where: {
-        userId_roleId_outletId: {
+        userId: user.id,
+        roleId: role.id,
+        outletId: null,
+      },
+    });
+
+    if (!existingUserRole) {
+      await prisma.userRole.create({
+        data: {
           userId: user.id,
           roleId: role.id,
           outletId: null,
         },
-      },
-      update: {},
-      create: {
-        userId: user.id,
-        roleId: role.id,
-      },
-    });
+      });
+    }
   }
 
   // eslint-disable-next-line no-console

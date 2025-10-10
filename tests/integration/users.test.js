@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createExpressApp } from '../../src/Infrastructures/WebServer/ExpressServer.js';
-import createContainer from '../../src/Infrastructures/Config/Container.js';
+import createContainer from '../../src/Infrastructures/Containers/index.js';
 import UserRepository from '../../src/Domains/Users/Repositories/UserRepository.js';
+import RoleRepository from '../../src/Domains/Users/Repositories/RoleRepository.js';
 
 class InMemoryUserRepository extends UserRepository {
   constructor() {
@@ -142,13 +143,44 @@ class InMemoryUserRepository extends UserRepository {
   }
 }
 
+class NoopRoleRepository extends RoleRepository {
+  async findAll() {
+    return [];
+  }
+
+  async findById() {
+    return null;
+  }
+
+  async findByName() {
+    return null;
+  }
+
+  async findPermissionsByNames() {
+    return [];
+  }
+
+  async createRole() {
+    throw new Error('NOT_IMPLEMENTED');
+  }
+
+  async updateRole() {
+    throw new Error('NOT_IMPLEMENTED');
+  }
+
+  async deleteRole() {
+    throw new Error('NOT_IMPLEMENTED');
+  }
+}
+
 function clone(record) {
   return record ? JSON.parse(JSON.stringify(record)) : record;
 }
 
 function createTestApp() {
   const userRepository = new InMemoryUserRepository();
-  const container = createContainer({ userRepository });
+  const roleRepository = new NoopRoleRepository();
+  const container = createContainer({ userRepository, roleRepository });
   const app = createExpressApp({ container });
   const server = app.listen(0);
   const { port } = server.address();

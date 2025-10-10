@@ -1,12 +1,13 @@
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
 
 export default class BaseUserUsecase {
-  constructor({ userService } = {}) {
+  constructor({ userService, outletService } = {}) {
     if (!userService) {
       throw new Error('USER_USECASE.MISSING_USER_SERVICE');
     }
 
     this.userService = userService;
+    this.outletService = outletService ?? null;
   }
 
   async _findRole(roleName) {
@@ -47,5 +48,31 @@ export default class BaseUserUsecase {
     if (String(password ?? '').length < 8) {
       throw new ValidationError('Password must be at least 8 characters long');
     }
+  }
+
+  async _assertOutletExists(outletId) {
+    if (outletId === undefined || outletId === null) {
+      return null;
+    }
+
+    const normalizedId = Number(outletId);
+    if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
+      throw new ValidationError('Outlet id must be a positive integer');
+    }
+
+    if (!this.outletService || typeof this.outletService.getOutlet !== 'function') {
+      throw new Error('USER_USECASE.MISSING_OUTLET_SERVICE');
+    }
+
+    if (this.outletService.supportsOutletValidation === false) {
+      return normalizedId;
+    }
+
+    const outlet = await this.outletService.getOutlet(normalizedId);
+    if (!outlet) {
+      throw new ValidationError('Outlet not found');
+    }
+
+    return normalizedId;
   }
 }
