@@ -1,5 +1,5 @@
 import BaseRoleUsecase from './BaseRoleUsecase.js';
-import Role from '../../../Domains/Users/Entities/Role.js';
+import Role from '../../../Domains/Roles/Entities/Role.js';
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
 import AppError from '../../../Commons/Errors/AppError.js';
 import HttpStatus from '../../../Commons/Constants/HttpStatus.js';

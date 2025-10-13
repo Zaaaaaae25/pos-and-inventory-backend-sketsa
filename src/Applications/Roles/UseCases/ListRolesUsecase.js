@@ -1,5 +1,5 @@
 import BaseRoleUsecase from './BaseRoleUsecase.js';
-import Role from '../../../Domains/Users/Entities/Role.js';
+import Role from '../../../Domains/Roles/Entities/Role.js';
 
 export default class ListRolesUsecase extends BaseRoleUsecase {
   constructor(dependencies = {}) {

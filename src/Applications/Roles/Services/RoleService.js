@@ -1,4 +1,4 @@
-import RoleRepository from '../../../Domains/Users/Repositories/RoleRepository.js';
+import RoleRepository from '../../../Domains/Roles/Repositories/RoleRepository.js';
 
 export default class RoleService {
   constructor({ roleRepository } = {}) {

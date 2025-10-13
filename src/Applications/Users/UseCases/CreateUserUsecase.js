@@ -2,7 +2,7 @@ import BaseUserUsecase from './BaseUserUsecase.js';
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
 import { hashSecret } from '../../../Commons/Utils/HashPassword.js';
 import User from '../../../Domains/Users/Entities/User.js';
-import Role from '../../../Domains/Users/Entities/Role.js';
+import Role from '../../../Domains/Roles/Entities/Role.js';
 import CashierUser from '../../../Domains/Users/Entities/CashierUser.js';
 import ManagedUser from '../../../Domains/Users/Entities/ManagedUser.js';
 

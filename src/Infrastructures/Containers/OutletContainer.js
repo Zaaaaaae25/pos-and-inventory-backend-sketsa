@@ -10,65 +10,12 @@ import {
 import OutletPresenter from '../../Interfaces/Presenters/OutletPresenter.js';
 import OutletController from '../../Interfaces/Controllers/OutletController.js';
 
-function createInMemoryOutletRepository() {
-  const outlets = [];
-  let sequence = 1;
-
-  return {
-    async findAll() {
-      return outlets.map((outlet) => ({ ...outlet }));
-    },
-
-    async findById(id) {
-      return outlets.find((outlet) => outlet.id === id) ?? null;
-    },
-
-    async createOutlet({ outletData }) {
-      const record = {
-        id: sequence++,
-        name: outletData.name,
-        address: outletData.address ?? null,
-        phone: outletData.phone ?? null,
-        isActive: typeof outletData.isActive === 'boolean' ? outletData.isActive : true,
-      };
-      outlets.push(record);
-      return { ...record };
-    },
-
-    async updateOutlet({ id, outletData }) {
-      const index = outlets.findIndex((outlet) => outlet.id === id);
-      if (index === -1) {
-        return null;
-      }
-
-      outlets[index] = {
-        ...outlets[index],
-        ...outletData,
-      };
-
-      return { ...outlets[index] };
-    },
-
-    async deleteOutlet(id) {
-      const index = outlets.findIndex((outlet) => outlet.id === id);
-      if (index === -1) {
-        return false;
-      }
-
-      outlets.splice(index, 1);
-      return true;
-    },
-  };
-}
 
 export default function registerOutletContainer({ container, overrides = {}, prisma }) {
   const outletRepository =
-    overrides.outletRepository ??
-    (prisma ? new PrismaOutletRepository({ prisma }) : createInMemoryOutletRepository());
-
+    overrides.outletRepository ?? new PrismaOutletRepository({ prisma });
   const outletService =
     overrides.outletService ?? new OutletService({ outletRepository });
-
   const listOutletsUsecase =
     overrides.listOutletsUsecase ?? new ListOutletsUsecase({ outletService });
   const getOutletUsecase =

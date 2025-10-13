@@ -4,7 +4,7 @@ import HttpStatus from '../../../Commons/Constants/HttpStatus.js';
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
 import { hashSecret } from '../../../Commons/Utils/HashPassword.js';
 import User from '../../../Domains/Users/Entities/User.js';
-import Role from '../../../Domains/Users/Entities/Role.js';
+import Role from '../../../Domains/Roles/Entities/Role.js';
 
 export default class UpdateUserUsecase extends BaseUserUsecase {
   constructor(dependencies = {}) {

@@ -26,8 +26,71 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
         name: 'Outlets',
         description: 'Endpoint untuk manajemen outlet',
       },
+      {
+        name: 'Auth',
+        description: 'Endpoint untuk autentikasi pengguna',
+      },
     ],
     paths: {
+      '/api/auth/login': {
+        post: {
+          tags: ['Auth'],
+          summary: 'Login pengguna',
+          operationId: 'loginUser',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/LoginRequest',
+                },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Login berhasil',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/LoginResponse',
+                  },
+                },
+              },
+            },
+            '400': {
+              $ref: '#/components/responses/BadRequest',
+            },
+            '401': {
+              $ref: '#/components/responses/Unauthorized',
+            },
+            '403': {
+              $ref: '#/components/responses/Forbidden',
+            },
+            '500': {
+              $ref: '#/components/responses/InternalServerError',
+            },
+          },
+        },
+      },
+      '/api/auth/logout': {
+        post: {
+          tags: ['Auth'],
+          summary: 'Logout pengguna',
+          operationId: 'logoutUser',
+          responses: {
+            '204': {
+              description: 'Logout berhasil',
+            },
+            '401': {
+              $ref: '#/components/responses/Unauthorized',
+            },
+            '500': {
+              $ref: '#/components/responses/InternalServerError',
+            },
+          },
+        },
+      },
       '/api/users': {
         get: {
           tags: ['Users'],
@@ -759,10 +822,64 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
             },
           },
         },
+        LoginRequest: {
+          type: 'object',
+          required: ['username', 'password'],
+          properties: {
+            username: {
+              type: 'string',
+              example: 'alice@example.com',
+              description: 'Email akun yang digunakan untuk login',
+            },
+            password: {
+              type: 'string',
+              example: 'SuperSecret123',
+              description: 'Password atau PIN tergantung role pengguna',
+            },
+          },
+        },
+        LoginResponse: {
+          type: 'object',
+          required: ['token', 'tokenType', 'user'],
+          properties: {
+            token: {
+              type: 'string',
+              description: 'JWT token yang harus digunakan pada Authorization header',
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+            },
+            tokenType: {
+              type: 'string',
+              example: 'Bearer',
+            },
+            user: {
+              $ref: '#/components/schemas/User',
+            },
+          },
+        },
       },
       responses: {
         BadRequest: {
           description: 'Permintaan tidak valid',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/ErrorResponse',
+              },
+            },
+          },
+        },
+        Unauthorized: {
+          description: 'Autentikasi gagal',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/ErrorResponse',
+              },
+            },
+          },
+        },
+        Forbidden: {
+          description: 'Akses ditolak',
           content: {
             'application/json': {
               schema: {

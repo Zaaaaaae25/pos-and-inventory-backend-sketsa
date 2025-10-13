@@ -1,4 +1,4 @@
-import Role from '../../Users/Entities/Role.js';
+import Role from '../../Roles/Entities/Role.js';
 
 export default class User {
   constructor({

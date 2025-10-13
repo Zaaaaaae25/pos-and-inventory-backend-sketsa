@@ -6,7 +6,6 @@
     "scripts": {
         "start": "node src/index.js",
         "dev": "nodemon src/index.js",
-        "test": "node --test",
         "build:schema": "node prisma/build-schema.js",
         "prisma:generate": "npm run build:schema && npx prisma generate",
         "prisma:migrate": "npm run build:schema && npx prisma migrate dev",

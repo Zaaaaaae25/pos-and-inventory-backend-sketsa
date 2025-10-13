@@ -55,7 +55,10 @@ export default class PrismaUserRepository extends UserRepository {
       return null;
     }
 
-    return this._prisma.user.findUnique({ where: { email } });
+    return this._prisma.user.findUnique({
+      where: { email },
+      include: userInclude,
+    });
   }
 
   async createUser({ userData, roleId, outletId }) {

@@ -1,6 +1,6 @@
 import BaseRoleUsecase from './BaseRoleUsecase.js';
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
-import Role from '../../../Domains/Users/Entities/Role.js';
+import Role from '../../../Domains/Roles/Entities/Role.js';
 
 export default class CreateRoleUsecase extends BaseRoleUsecase {
   constructor(dependencies = {}) {
