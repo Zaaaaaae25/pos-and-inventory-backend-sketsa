@@ -23,8 +23,8 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
         description: 'Endpoint untuk manajemen role dan permission',
       },
       {
-        name: 'Outlets',
-        description: 'Endpoint untuk manajemen outlet',
+        name: 'Places',
+        description: 'Endpoint untuk manajemen tempat (outlet, warehouse, dan lainnya)',
       },
       {
         name: 'Auth',
@@ -384,20 +384,20 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
           },
         },
       },
-      '/api/outlets': {
+      '/api/places': {
         get: {
-          tags: ['Outlets'],
-          summary: 'Daftar semua outlet',
-          operationId: 'listOutlets',
+          tags: ['Places'],
+          summary: 'Daftar semua tempat',
+          operationId: 'listPlaces',
           responses: {
             '200': {
-              description: 'Daftar outlet berhasil diambil',
+              description: 'Daftar tempat berhasil diambil',
               content: {
                 'application/json': {
                   schema: {
                     type: 'array',
                     items: {
-                      $ref: '#/components/schemas/Outlet',
+                      $ref: '#/components/schemas/Place',
                     },
                   },
                 },
@@ -409,26 +409,26 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
           },
         },
         post: {
-          tags: ['Outlets'],
-          summary: 'Buat outlet baru',
-          operationId: 'createOutlet',
+          tags: ['Places'],
+          summary: 'Buat tempat baru',
+          operationId: 'createPlace',
           requestBody: {
             required: true,
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/CreateOutletRequest',
+                  $ref: '#/components/schemas/CreatePlaceRequest',
                 },
               },
             },
           },
           responses: {
             '201': {
-              description: 'Outlet berhasil dibuat',
+              description: 'Tempat berhasil dibuat',
               content: {
                 'application/json': {
                   schema: {
-                    $ref: '#/components/schemas/Outlet',
+                    $ref: '#/components/schemas/Place',
                   },
                 },
               },
@@ -442,13 +442,13 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
           },
         },
       },
-      '/api/outlets/{id}': {
+      '/api/places/{id}': {
         parameters: [
           {
             name: 'id',
             in: 'path',
             required: true,
-            description: 'ID outlet',
+            description: 'ID tempat',
             schema: {
               type: 'integer',
               minimum: 1,
@@ -456,16 +456,16 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
           },
         ],
         get: {
-          tags: ['Outlets'],
-          summary: 'Ambil detail outlet',
-          operationId: 'getOutlet',
+          tags: ['Places'],
+          summary: 'Ambil detail tempat',
+          operationId: 'getPlace',
           responses: {
             '200': {
-              description: 'Detail outlet ditemukan',
+              description: 'Detail tempat ditemukan',
               content: {
                 'application/json': {
                   schema: {
-                    $ref: '#/components/schemas/Outlet',
+                    $ref: '#/components/schemas/Place',
                   },
                 },
               },
@@ -482,26 +482,26 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
           },
         },
         put: {
-          tags: ['Outlets'],
-          summary: 'Perbarui data outlet',
-          operationId: 'updateOutlet',
+          tags: ['Places'],
+          summary: 'Perbarui data tempat',
+          operationId: 'updatePlace',
           requestBody: {
             required: true,
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/UpdateOutletRequest',
+                  $ref: '#/components/schemas/UpdatePlaceRequest',
                 },
               },
             },
           },
           responses: {
             '200': {
-              description: 'Outlet berhasil diperbarui',
+              description: 'Tempat berhasil diperbarui',
               content: {
                 'application/json': {
                   schema: {
-                    $ref: '#/components/schemas/Outlet',
+                    $ref: '#/components/schemas/Place',
                   },
                 },
               },
@@ -518,12 +518,12 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
           },
         },
         delete: {
-          tags: ['Outlets'],
-          summary: 'Hapus outlet',
-          operationId: 'deleteOutlet',
+          tags: ['Places'],
+          summary: 'Hapus tempat',
+          operationId: 'deletePlace',
           responses: {
             '204': {
-              description: 'Outlet berhasil dihapus',
+              description: 'Tempat berhasil dihapus',
             },
             '400': {
               $ref: '#/components/responses/BadRequest',
@@ -566,11 +566,11 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
               description: 'Metode autentikasi yang digunakan pengguna',
               enum: ['password', 'pin'],
             },
-            outletId: {
+            placeId: {
               type: 'integer',
               nullable: true,
               example: 10,
-              description: 'ID outlet tempat pengguna ditugaskan',
+              description: 'ID tempat tempat pengguna ditugaskan',
             },
             role: {
               nullable: true,
@@ -604,7 +604,7 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
             },
           },
         },
-        Outlet: {
+        Place: {
           type: 'object',
           required: ['id', 'name', 'isActive'],
           properties: {
@@ -625,6 +625,17 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
               type: 'string',
               nullable: true,
               example: '+62-812-3456-7890',
+            },
+            logoPath: {
+              type: 'string',
+              nullable: true,
+              example: '/uploads/logos/main.png',
+            },
+            type: {
+              type: 'string',
+              nullable: true,
+              example: 'outlet',
+              description: 'Jenis tempat (outlet, warehouse, dsb)',
             },
             isActive: {
               type: 'boolean',
@@ -679,7 +690,7 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
             },
           },
         },
-        CreateOutletRequest: {
+        CreatePlaceRequest: {
           type: 'object',
           required: ['name'],
           properties: {
@@ -697,14 +708,24 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
               nullable: true,
               example: '+62-811-0000-1111',
             },
+            logoPath: {
+              type: 'string',
+              nullable: true,
+              example: '/uploads/logos/outlet.png',
+            },
+            type: {
+              type: 'string',
+              nullable: true,
+              example: 'warehouse',
+            },
             isActive: {
               type: 'boolean',
               default: true,
-              description: 'Status aktif outlet',
+              description: 'Status aktif tempat',
             },
           },
         },
-        UpdateOutletRequest: {
+        UpdatePlaceRequest: {
           type: 'object',
           minProperties: 1,
           properties: {
@@ -722,9 +743,19 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
               nullable: true,
               example: '+62-813-2222-3333',
             },
+            logoPath: {
+              type: 'string',
+              nullable: true,
+              example: '/uploads/logos/updated.png',
+            },
+            type: {
+              type: 'string',
+              nullable: true,
+              example: 'cold_storage',
+            },
             isActive: {
               type: 'boolean',
-              description: 'Ubah status aktif outlet',
+              description: 'Ubah status aktif tempat',
             },
           },
         },
@@ -764,7 +795,7 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
               nullable: true,
               example: 'active',
             },
-            outletId: {
+            placeId: {
               type: 'integer',
               nullable: true,
               example: 5,
@@ -801,7 +832,7 @@ export function createOpenApiDocument({ serverUrl = 'http://localhost:3000' } = 
               nullable: true,
               example: '9876',
             },
-            outletId: {
+            placeId: {
               type: 'integer',
               nullable: true,
               example: 8,

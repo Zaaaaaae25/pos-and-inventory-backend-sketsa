@@ -2,11 +2,11 @@ import { getPrisma } from '../DatabaseConfig.js';
 import registerUserContainer from './UserContainer.js';
 import registerRoleContainer from './RoleContainer.js';
 import registerAuthContainer from './AuthContainer.js';
-import registerOutletContainer from './OutletContainer.js';
+import registerPlaceContainer from './PlaceContainer.js';
 
 export default function createContainer(overrides = {}) {
   const shouldSkipPrisma =
-    overrides.userRepository || overrides.roleRepository || overrides.outletRepository;
+    overrides.userRepository || overrides.roleRepository || overrides.placeRepository;
 
   const prismaClient = shouldSkipPrisma
     ? overrides.prisma ?? null
@@ -18,7 +18,7 @@ export default function createContainer(overrides = {}) {
 
   registerRoleContainer({ container: values, overrides, prisma: prismaClient });
   registerUserContainer({ container: values, overrides, prisma: prismaClient });
-  registerOutletContainer({ container: values, overrides, prisma: prismaClient });
+  registerPlaceContainer({ container: values, overrides, prisma: prismaClient });
   registerAuthContainer({ container: values, overrides });
 
   return {

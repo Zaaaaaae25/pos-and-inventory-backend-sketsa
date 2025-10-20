@@ -73,70 +73,63 @@ model RolePermission {
 }
 
 model UserRole {
-  id       Int  @id @default(autoincrement())
-  userId   Int  @map("user_id")
-  roleId   Int  @map("role_id")
-  outletId Int? @map("outlet_id")
+  id      Int  @id @default(autoincrement())
+  userId  Int  @map("user_id")
+  roleId  Int  @map("role_id")
+  placeId Int? @map("place_id")
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role  Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  place Place? @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, roleId, outletId])
+  @@unique([userId, roleId, placeId])
   @@map("user_roles")
 }
 
 
-// ===== 02-outlets-warehouses.prisma =====
-/// ========== OUTLETS & WAREHOUSES ==========
-model Outlet {
-  id        Int     @id @default(autoincrement())
-  name      String
-  address   String?
-  phone     String?
-  isActive  Boolean @default(true) @map("is_active")
-
-  // relations
-  userRoles          UserRole[]
-  cashierShifts      CashierShift[]
-  menus              Menu[]
-  tables             Table[]
-  outletIngredients  OutletIngredient[]
-  transactions       Transaction[] @relation("OutletTransactions")
-  promotions         Promotion[]
-  purchaseOrders     PurchaseOrder[]
-  reportFiles        ReportFile[]
-  deliveryIntegrations DeliveryIntegration[]
-  stockAdjustments   StockAdjustment[]
-  stockTransfersFrom StockTransfer[] @relation("StockTransferFrom")
-  stockTransfersTo   StockTransfer[] @relation("StockTransferTo")
-  wastes             Waste[]
-
-  @@map("outlets")
-}
-
-model Warehouse {
+// ===== 02-places.prisma =====
+/// ========== PLACES ==========
+model Place {
   id       Int     @id @default(autoincrement())
   name     String
+  address  String?
+  phone    String?
+  logoPath String? @map("logo_path")
   type     String?
   isActive Boolean @default(true) @map("is_active")
 
-  warehouseStocks WarehouseStock[]
+  // relations
+  userRoles            UserRole[]
+  cashierShifts        CashierShift[]
+  menus                Menu[]
+  tables               Table[]
+  placeStocks          PlaceStock[]
+  transactions         Transaction[] @relation("PlaceTransactions")
+  promotions           Promotion[]
+  purchaseOrders       PurchaseOrder[]
+  reportFiles          ReportFile[]
+  deliveryIntegrations DeliveryIntegration[]
+  stockTransfersFrom   StockTransfer[] @relation("StockTransferFrom")
+  stockTransfersTo     StockTransfer[] @relation("StockTransferTo")
+  wastes               Waste[]
+  inventoryStockDaily  InventoryStockDaily[]
 
-  @@map("warehouses")
+  @@map("places")
 }
 
-model WarehouseStock {
+model PlaceStock {
   id           Int     @id @default(autoincrement())
-  warehouseId  Int     @map("warehouse_id")
+  placeId      Int     @map("place_id")
   ingredientId Int     @map("ingredient_id")
   qty          Decimal @db.Decimal(12, 2) @default(0)
+  unitId       Int     @map("unit_id")
 
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  place      Place      @relation(fields: [placeId], references: [id], onDelete: Restrict)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  unit       Unit       @relation(fields: [unitId], references: [id], onDelete: Restrict)
 
-  @@unique([warehouseId, ingredientId])
-  @@map("warehouse_stocks")
+  @@unique([placeId, ingredientId, unitId])
+  @@map("place_stocks")
 }
 
 
@@ -144,17 +137,18 @@ model WarehouseStock {
 /// ========== CASHIER SHIFTS ==========
 model CashierShift {
   id             Int       @id @default(autoincrement())
-  outletId       Int       @map("outlet_id")
+  placeId        Int       @map("place_id")
   cashierId      Int       @map("cashier_id")
   openedAt       DateTime  @default(now()) @map("opened_at")
   closedAt       DateTime? @map("closed_at")
   openingBalance Decimal   @db.Decimal(12, 2) @default(0) @map("opening_balance")
   closingBalance Decimal?  @db.Decimal(12, 2) @map("closing_balance")
   systemBalance  Decimal?  @db.Decimal(12, 2) @map("system_balance")
+  ipAddress      String    @map("ip_address")
   status         String    @default("open")
 
-  outlet  Outlet @relation(fields: [outletId], references: [id], onDelete: Restrict)
-  cashier User   @relation("UserCashierShifts", fields: [cashierId], references: [id], onDelete: Restrict)
+  place   Place @relation(fields: [placeId], references: [id], onDelete: Restrict)
+  cashier User  @relation("UserCashierShifts", fields: [cashierId], references: [id], onDelete: Restrict)
 
   @@map("cashier_shifts")
 }
@@ -164,20 +158,29 @@ model CashierShift {
 /// ========== MENUS ==========
 model Menu {
   id          Int      @id @default(autoincrement())
-  outletId    Int?     @map("outlet_id")
+  placeId     Int?     @map("place_id")
   name        String
-  category    String
+  categoryId  Int?     @map("category_id")
   description String?
   isActive    Boolean  @default(true) @map("is_active")
 
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
-  variants MenuVariant[]
-  prices   MenuPrice[]
-  recipes  Recipe[]
+  place     Place?    @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  category  Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants  MenuVariant[]
+  prices    MenuPrice[]
+  recipes   Recipe[]
   transactionItems TransactionItem[]
-  promotionItems   PromotionItem[]
 
   @@map("menus")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  menus Menu[]
+
+  @@map("categories")
 }
 
 model MenuVariant {
@@ -186,6 +189,7 @@ model MenuVariant {
   name   String
 
   menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items MenuVariantItem[]
   transactionItemVariants TransactionItemVariant[]
 
   @@map("menu_variants")
@@ -195,11 +199,22 @@ model MenuPrice {
   id        Int      @id @default(autoincrement())
   menuId    Int      @map("menu_id")
   price     Decimal  @db.Decimal(12, 2)
-  validFrom DateTime @map("valid_from")
+  effectiveDate DateTime @map("effective_date") @db.Date
 
   menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
 
   @@map("menu_prices")
+}
+
+model MenuVariantItem {
+  id             Int     @id @default(autoincrement())
+  menuVariantId  Int     @map("menu_variant_id")
+  name           String
+  additionalPrice Decimal @db.Decimal(12, 2) @default(0) @map("additional_price")
+
+  menuVariant MenuVariant @relation(fields: [menuVariantId], references: [id], onDelete: Cascade)
+
+  @@map("menu_variant_items")
 }
 
 
@@ -210,39 +225,26 @@ model Unit {
   name         String @unique
   abbreviation String @unique
 
-  ingredients       Ingredient[]
-  outletIngredients OutletIngredient[]
+  ingredients      Ingredient[]
+  placeStocks      PlaceStock[]
+  goodsReceiptItems GoodsReceiptItem[]
 
   @@map("units")
-}
-
-model OutletIngredient {
-  id       Int     @id @default(autoincrement())
-  outletId Int?    @map("outlet_id")
-  name     String
-  unitId   Int     @map("unit_id")
-  stock    Decimal @db.Decimal(12, 2) @default(0)
-
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
-  unit   Unit    @relation(fields: [unitId], references: [id], onDelete: Restrict)
-
-  @@map("outlet_ingredients")
 }
 
 model Ingredient {
   id    Int     @id @default(autoincrement())
   name  String
   unitId Int    @map("unit_id")
-  cost  Decimal @db.Decimal(12, 2)
 
   unit               Unit              @relation(fields: [unitId], references: [id], onDelete: Restrict)
   recipes            Recipe[]
-  warehouseStocks    WarehouseStock[]
+  placeStocks        PlaceStock[]
   supplierProducts   SupplierProduct[]
   ingredientPackages IngredientPackage[]
-  stockAdjustments   StockAdjustment[]
   stockTransfers     StockTransfer[]
   wastes             Waste[]
+  inventoryStockDaily InventoryStockDaily[]
 
   @@map("ingredients")
 }
@@ -280,7 +282,7 @@ model PaymentMethod {
 model Transaction {
   id              Int      @id @default(autoincrement())
   cashierId       Int      @map("cashier_id")
-  outletId        Int      @map("outlet_id")
+  placeId         Int?     @map("place_id")
   tableId         Int?     @map("table_id")
   orderType       String?  @map("order_type")
   total           Decimal  @db.Decimal(12, 2)
@@ -290,7 +292,7 @@ model Transaction {
   createdAt       DateTime @default(now()) @map("created_at")
 
   cashier       User           @relation("UserTransactions", fields: [cashierId], references: [id], onDelete: Restrict)
-  outlet        Outlet         @relation("OutletTransactions", fields: [outletId], references: [id], onDelete: Restrict)
+  place         Place?         @relation("PlaceTransactions", fields: [placeId], references: [id], onDelete: SetNull)
   table         Table?         @relation(fields: [tableId], references: [id], onDelete: SetNull)
   paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
 
@@ -333,12 +335,12 @@ model TransactionItemVariant {
 // ===== 08-tables.prisma =====
 /// ========== TABLES (DINE-IN) ==========
 model Table {
-  id       Int    @id @default(autoincrement())
-  outletId Int    @map("outlet_id")
-  name     String
-  status   String?
+  id      Int    @id @default(autoincrement())
+  placeId Int    @map("place_id")
+  name    String
+  status  String?
 
-  outlet       Outlet       @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  place        Place        @relation(fields: [placeId], references: [id], onDelete: Restrict)
   transactions Transaction[]
 
   @@map("tables")
@@ -397,12 +399,14 @@ model SupplierProduct {
 
 model PurchaseOrder {
   id         Int      @id @default(autoincrement())
-  outletId   Int      @map("outlet_id")
+  placeId    Int      @map("place_id")
   supplierId Int      @map("supplier_id")
+  type       String? 
+  note       String?
   status     String   @default("draft")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  place    Place    @relation(fields: [placeId], references: [id], onDelete: Restrict)
   supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
 
   items         PurchaseOrderItem[]
@@ -420,6 +424,7 @@ model PurchaseOrderItem {
 
   purchaseOrder     PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   ingredientPackage IngredientPackage @relation(fields: [ingredientPackageId], references: [id], onDelete: Restrict)
+  goodsReceiptItems GoodsReceiptItem[]
 
   @@map("purchase_order_items")
 }
@@ -443,13 +448,11 @@ model IngredientPackage {
   ingredientId Int     @map("ingredient_id")
   packageId    Int     @map("package_id")
   qty          Decimal @db.Decimal(12, 2)
-  price        Decimal @db.Decimal(12, 2)
 
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
   package    Package    @relation(fields: [packageId], references: [id], onDelete: Restrict)
 
   purchaseOrderItems PurchaseOrderItem[]
-  goodsReceiptItems  GoodsReceiptItem[]
 
   @@unique([ingredientId, packageId])
   @@map("ingredient_packages")
@@ -475,14 +478,15 @@ model GoodsReceipt {
 model GoodsReceiptItem {
   id                 Int     @id @default(autoincrement())
   goodsReceiptId     Int     @map("goods_receipt_id")
-  ingredientPackageId Int    @map("ingredient_package_id")
-  qtyReceived        Decimal @db.Decimal(12, 2) @map("qty_received")
-  qtyDamaged         Decimal @db.Decimal(12, 2) @default(0) @map("qty_damaged")
-  unitPrice          Decimal @db.Decimal(12, 2) @map("unit_price")
+  purchaseOrderItemId Int    @map("purchase_order_item_id")
+  unitReceived       Decimal @db.Decimal(12, 2) @map("unit_received")
+  unitDamaged        Decimal @db.Decimal(12, 2) @default(0) @map("unit_damaged")
+  unitId             Int     @map("unit_id")
   remarks            String?
 
   goodsReceipt     GoodsReceipt     @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
-  ingredientPackage IngredientPackage @relation(fields: [ingredientPackageId], references: [id], onDelete: Restrict)
+  purchaseOrderItem PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id], onDelete: Restrict)
+  unit              Unit              @relation(fields: [unitId], references: [id], onDelete: Restrict)
 
   @@map("goods_receipt_items")
 }
@@ -490,31 +494,17 @@ model GoodsReceiptItem {
 
 // ===== 13-stock-ops.prisma =====
 /// ========== STOCK OPS ==========
-model StockAdjustment {
-  id          Int     @id @default(autoincrement())
-  ingredientId Int   @map("ingredient_id")
-  outletId    Int    @map("outlet_id")
-  qtyDiff     Decimal @db.Decimal(12, 2) @map("qty_diff")
-  reason      String?
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
-  outlet     Outlet     @relation(fields: [outletId], references: [id], onDelete: Restrict)
-
-  @@map("stock_adjustments")
-}
-
 model StockTransfer {
   id           Int     @id @default(autoincrement())
   ingredientId Int     @map("ingredient_id")
-  fromOutletId Int?    @map("from_outlet_id")
-  toOutletId   Int?    @map("to_outlet_id")
+  fromPlaceId Int?    @map("from_place_id")
+  toPlaceId   Int?    @map("to_place_id")
   qty          Decimal @db.Decimal(12, 2)
   createdAt    DateTime @default(now()) @map("created_at")
 
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
-  fromOutlet Outlet?    @relation("StockTransferFrom", fields: [fromOutletId], references: [id], onDelete: SetNull)
-  toOutlet   Outlet?    @relation("StockTransferTo", fields: [toOutletId], references: [id], onDelete: SetNull)
+  fromPlace  Place?    @relation("StockTransferFrom", fields: [fromPlaceId], references: [id], onDelete: SetNull)
+  toPlace    Place?    @relation("StockTransferTo", fields: [toPlaceId], references: [id], onDelete: SetNull)
 
   @@map("stock_transfers")
 }
@@ -522,15 +512,32 @@ model StockTransfer {
 model Waste {
   id          Int     @id @default(autoincrement())
   ingredientId Int   @map("ingredient_id")
-  outletId    Int?   @map("outlet_id")
+  placeId    Int?   @map("place_id")
   qty         Decimal @db.Decimal(12, 2)
   reason      String?
   createdAt   DateTime @default(now()) @map("created_at")
 
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
-  outlet     Outlet?    @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  place     Place?    @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   @@map("wastes")
+}
+
+model InventoryStockDaily {
+  id           Int     @id @default(autoincrement())
+  placeId      Int     @map("place_id")
+  ingredientId Int     @map("ingredient_id")
+  date         DateTime @db.Date
+  openingQty   Decimal  @db.Decimal(12, 2) @default(0) @map("opening_qty")
+  closingQty   Decimal  @db.Decimal(12, 2) @default(0) @map("closing_qty")
+  diffQty      Decimal? @db.Decimal(12, 2) @map("diff_qty")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  place      Place      @relation(fields: [placeId], references: [id], onDelete: Restrict)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@unique([placeId, ingredientId, date])
+  @@map("inventory_stock_daily")
 }
 
 
@@ -538,18 +545,14 @@ model Waste {
 /// ========== PROMOTIONS ==========
 model Promotion {
   id            Int      @id @default(autoincrement())
-  outletId      Int?     @map("outlet_id")
+  placeId       Int?     @map("place_id")
   name          String
-  type          String?
-  discountType  String?  @map("discount_type")
-  discountValue Decimal? @db.Decimal(12, 2) @map("discount_value")
   startAt       DateTime? @map("start_at")
   endAt         DateTime? @map("end_at")
 
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  place Place? @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   rules PromotionRule[]
-  items PromotionItem[]
 
   @@map("promotions")
 }
@@ -563,17 +566,6 @@ model PromotionRule {
   promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
 
   @@map("promotion_rules")
-}
-
-model PromotionItem {
-  id          Int  @id @default(autoincrement())
-  promotionId Int  @map("promotion_id")
-  menuId      Int? @map("menu_id")
-
-  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
-  menu      Menu?     @relation(fields: [menuId], references: [id], onDelete: SetNull)
-
-  @@map("promotion_items")
 }
 
 
@@ -611,12 +603,12 @@ model ReportFile {
   reportType  String   @map("report_type")
   reportScope String   @map("report_scope")
   reportDate  DateTime? @map("report_date")
-  outletId    Int?     @map("outlet_id")
+  placeId     Int?     @map("place_id")
   fileName    String   @map("file_name")
   filePath    String   @map("file_path")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  place Place? @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   @@map("report_files")
 }
@@ -626,12 +618,12 @@ model ReportFile {
 /// ========== DELIVERY INTEGRATIONS ==========
 model DeliveryIntegration {
   id           Int    @id @default(autoincrement())
-  outletId     Int    @map("outlet_id")
+  placeId      Int    @map("place_id")
   platformName String @map("platform_name")
   apiKey       String? @map("api_key")
   settingsJson Json?   @map("settings_json") @db.JsonB
 
-  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Restrict)
 
   @@map("delivery_integrations")
 }

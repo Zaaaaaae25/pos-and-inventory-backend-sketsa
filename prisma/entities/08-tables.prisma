@@ -1,11 +1,11 @@
 /// ========== TABLES (DINE-IN) ==========
 model Table {
-  id       Int    @id @default(autoincrement())
-  outletId Int    @map("outlet_id")
-  name     String
-  status   String?
+  id      Int    @id @default(autoincrement())
+  placeId Int    @map("place_id")
+  name    String
+  status  String?
 
-  outlet       Outlet       @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  place        Place        @relation(fields: [placeId], references: [id], onDelete: Restrict)
   transactions Transaction[]
 
   @@map("tables")

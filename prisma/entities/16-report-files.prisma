@@ -4,12 +4,12 @@ model ReportFile {
   reportType  String   @map("report_type")
   reportScope String   @map("report_scope")
   reportDate  DateTime? @map("report_date")
-  outletId    Int?     @map("outlet_id")
+  placeId     Int?     @map("place_id")
   fileName    String   @map("file_name")
   filePath    String   @map("file_path")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  place Place? @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   @@map("report_files")
 }

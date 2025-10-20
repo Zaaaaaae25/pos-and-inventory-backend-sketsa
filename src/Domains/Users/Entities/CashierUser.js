@@ -4,12 +4,12 @@ export default class CashierUser {
   constructor(payload) {
     this._verifyPayload(payload);
 
-    const { name, pin, status = 'active', outletId = null } = payload;
+    const { name, pin, status = 'active', placeId = null } = payload;
 
     this.name = name.trim();
     this.pin = String(pin).trim();
     this.status = status;
-    this.outletId = CashierUser.normalizeOutletId(outletId);
+    this.placeId = CashierUser.normalizePlaceId(placeId);
   }
 
   _verifyPayload(payload) {
@@ -17,7 +17,7 @@ export default class CashierUser {
       throw new ValidationError('CASHIER_USER.PAYLOAD_NOT_OBJECT');
     }
 
-    const { name, pin, status, outletId } = payload;
+    const { name, pin, status, placeId } = payload;
 
     if (!name || pin === undefined || pin === null) {
       throw new ValidationError('CASHIER_USER.NOT_CONTAIN_NEEDED_PROPERTY');
@@ -35,22 +35,22 @@ export default class CashierUser {
       throw new ValidationError('CASHIER_USER.STATUS_NOT_STRING');
     }
 
-    CashierUser.normalizeOutletId(outletId);
+    CashierUser.normalizePlaceId(placeId);
 
     if (!name.trim()) {
       throw new ValidationError('CASHIER_USER.NAME_EMPTY');
     }
   }
 
-  static normalizeOutletId(outletId) {
-    if (outletId === undefined || outletId === null || outletId === '') {
+  static normalizePlaceId(placeId) {
+    if (placeId === undefined || placeId === null || placeId === '') {
       return null;
     }
 
-    const numeric = Number(outletId);
+    const numeric = Number(placeId);
 
     if (Number.isNaN(numeric)) {
-      throw new ValidationError('CASHIER_USER.OUTLET_ID_NOT_NUMBER');
+      throw new ValidationError('CASHIER_USER.PLACE_ID_NOT_NUMBER');
     }
 
     return numeric;

@@ -61,7 +61,7 @@ export default class LoginUsecase {
       sub: user.id,
       name: user.name,
       role: user.role?.name ?? null,
-      outletId: user.outletId,
+      placeId: user.placeId,
     };
 
     const signOptions = {};

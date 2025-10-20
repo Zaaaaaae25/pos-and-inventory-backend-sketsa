@@ -4,13 +4,13 @@ export default class ManagedUser {
   constructor(payload) {
     this._verifyPayload(payload);
 
-    const { name, email, password, status = 'active', outletId = null } = payload;
+    const { name, email, password, status = 'active', placeId = null } = payload;
 
     this.name = name.trim();
     this.email = ManagedUser.normalizeEmail(email);
     this.password = password;
     this.status = status;
-    this.outletId = ManagedUser.normalizeOutletId(outletId);
+    this.placeId = ManagedUser.normalizePlaceId(placeId);
   }
 
   static normalizeEmail(email) {
@@ -26,7 +26,7 @@ export default class ManagedUser {
       throw new ValidationError('MANAGED_USER.PAYLOAD_NOT_OBJECT');
     }
 
-    const { name, email, password, status, outletId } = payload;
+    const { name, email, password, status, placeId } = payload;
 
     if (!name || !email || !password) {
       throw new ValidationError('MANAGED_USER.NOT_CONTAIN_NEEDED_PROPERTY');
@@ -57,18 +57,18 @@ export default class ManagedUser {
       throw new ValidationError('MANAGED_USER.STATUS_NOT_STRING');
     }
 
-    ManagedUser.normalizeOutletId(outletId);
+    ManagedUser.normalizePlaceId(placeId);
   }
 
-  static normalizeOutletId(outletId) {
-    if (outletId === undefined || outletId === null || outletId === '') {
+  static normalizePlaceId(placeId) {
+    if (placeId === undefined || placeId === null || placeId === '') {
       return null;
     }
 
-    const numeric = Number(outletId);
+    const numeric = Number(placeId);
 
     if (Number.isNaN(numeric)) {
-      throw new ValidationError('MANAGED_USER.OUTLET_ID_NOT_NUMBER');
+      throw new ValidationError('MANAGED_USER.PLACE_ID_NOT_NUMBER');
     }
 
     return numeric;

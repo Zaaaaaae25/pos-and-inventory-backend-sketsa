@@ -1,12 +1,12 @@
 /// ========== DELIVERY INTEGRATIONS ==========
 model DeliveryIntegration {
   id           Int    @id @default(autoincrement())
-  outletId     Int    @map("outlet_id")
+  placeId      Int    @map("place_id")
   platformName String @map("platform_name")
   apiKey       String? @map("api_key")
   settingsJson Json?   @map("settings_json") @db.JsonB
 
-  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Restrict)
 
   @@map("delivery_integrations")
 }

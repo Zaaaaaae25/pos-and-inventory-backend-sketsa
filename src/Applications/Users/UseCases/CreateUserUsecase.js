@@ -43,22 +43,22 @@ export default class CreateUserUsecase extends BaseUserUsecase {
       pinCodeHash: isCashier ? await hashSecret(userEntity.pin) : null,
     };
 
-    const outletId = await this._assertOutletExists(userEntity.outletId);
+    const placeId = await this._assertPlaceExists(userEntity.placeId);
 
     try {
       const created = await this.userService.createUser({
         userData,
         roleId: role.id,
-        outletId,
+        placeId,
       });
 
       return User.fromPersistence(created);
     } catch (error) {
       if (
         error?.code === 'P2003' &&
-        error?.meta?.constraint === 'user_roles_outlet_id_fkey'
+        error?.meta?.constraint === 'user_roles_place_id_fkey'
       ) {
-        throw new ValidationError('Outlet not found');
+        throw new ValidationError('Place not found');
       }
 
       throw error;

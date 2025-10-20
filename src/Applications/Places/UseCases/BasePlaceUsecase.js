@@ -1,12 +1,12 @@
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
 
-export default class BaseOutletUsecase {
-  constructor({ outletService } = {}) {
-    if (!outletService) {
-      throw new Error('OUTLET_USECASE.MISSING_SERVICE');
+export default class BasePlaceUsecase {
+  constructor({ placeService } = {}) {
+    if (!placeService) {
+      throw new Error('PLACE_USECASE.MISSING_SERVICE');
     }
 
-    this.outletService = outletService;
+    this.placeService = placeService;
   }
 
   _normalizeId(id) {
@@ -49,6 +49,26 @@ export default class BaseOutletUsecase {
         result.phone = payload.phone.trim() || null;
       } else {
         throw new ValidationError('phone must be a string or null');
+      }
+    }
+
+    if (typeof payload.logoPath !== 'undefined') {
+      if (payload.logoPath === null) {
+        result.logoPath = null;
+      } else if (typeof payload.logoPath === 'string') {
+        result.logoPath = payload.logoPath.trim() || null;
+      } else {
+        throw new ValidationError('logoPath must be a string or null');
+      }
+    }
+
+    if (typeof payload.type !== 'undefined') {
+      if (payload.type === null) {
+        result.type = null;
+      } else if (typeof payload.type === 'string') {
+        result.type = payload.type.trim() || null;
+      } else {
+        throw new ValidationError('type must be a string or null');
       }
     }
 

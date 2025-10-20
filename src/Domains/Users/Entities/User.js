@@ -8,7 +8,7 @@ export default class User {
     status = 'active',
     authenticationMethod = 'password',
     role = null,
-    outletId = null,
+    placeId = null,
   }) {
     this.id = id;
     this.name = name;
@@ -16,7 +16,7 @@ export default class User {
     this.status = status;
     this.authenticationMethod = authenticationMethod;
     this.role = role;
-    this.outletId = outletId;
+    this.placeId = placeId;
   }
 
   static fromPersistence(record) {
@@ -30,7 +30,7 @@ export default class User {
       status: record.status,
       authenticationMethod: record.pinCodeHash ? 'pin' : 'password',
       role,
-      outletId: roleAssignment?.outletId ?? null,
+      placeId: roleAssignment?.placeId ?? null,
     });
   }
 

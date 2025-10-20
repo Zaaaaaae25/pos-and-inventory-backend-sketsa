@@ -4,7 +4,7 @@ import logger from '../Logger/WinstonLogger.js';
 import { disconnectPrisma } from '../DatabaseConfig.js';
 import registerUserRoutes from '../../Interfaces/Http/routes/userRoutes.js';
 import registerRoleRoutes from '../../Interfaces/Http/routes/roleRoutes.js';
-import registerOutletRoutes from '../../Interfaces/Http/routes/outletRoutes.js';
+import registerPlaceRoutes from '../../Interfaces/Http/routes/placeRoutes.js';
 import registerAuthRoutes from '../../Interfaces/Http/routes/authRoutes.js';
 import errorHandler from '../../Interfaces/Middlewares/ErrorHandler.js';
 import createContainer from '../Containers/index.js';
@@ -18,13 +18,13 @@ export function createExpressApp({ container } = {}) {
   const diContainer = container ?? createContainer();
   const userController = diContainer.resolve('userController');
   const roleController = diContainer.resolve('roleController');
-  const outletController = diContainer.resolve('outletController');
+  const placeController = diContainer.resolve('placeController');
   const authController = diContainer.resolve('authController');
   const optionalAuth = diContainer.resolve('optionalAuth');
 
   registerUserRoutes(app, { controller: userController });
   registerRoleRoutes(app, { controller: roleController });
-  registerOutletRoutes(app, { controller: outletController });
+  registerPlaceRoutes(app, { controller: placeController });
   registerAuthRoutes(app, { controller: authController, optionalAuth });
 
   app.get('/api/docs.json', (req, res) => {

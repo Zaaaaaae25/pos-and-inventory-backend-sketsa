@@ -15,7 +15,7 @@ export default class UserPresenter {
       email: user.email,
       status: user.status,
       role,
-      outletId: user.outletId,
+      placeId: user.placeId,
       authenticationMethod: user.authenticationMethod,
     };
   }

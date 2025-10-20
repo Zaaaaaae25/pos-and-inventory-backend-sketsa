@@ -52,12 +52,12 @@ function normalizeNullableString(value) {
   return trimmed === '' ? null : trimmed;
 }
 
-function normalizeOutletSeed(outlet) {
-  if (!outlet || typeof outlet !== 'object') {
+function normalizePlaceSeed(place) {
+  if (!place || typeof place !== 'object') {
     return null;
   }
 
-  const normalizedName = normalizeNullableString(outlet.name ?? '');
+  const normalizedName = normalizeNullableString(place.name ?? '');
   if (!normalizedName) {
     return null;
   }
@@ -65,11 +65,13 @@ function normalizeOutletSeed(outlet) {
   const normalized = {
     name: normalizedName,
     isActive:
-      typeof outlet.isActive === 'boolean' ? outlet.isActive : outlet.isActive !== false,
+      typeof place.isActive === 'boolean' ? place.isActive : place.isActive !== false,
   };
 
-  const address = normalizeNullableString(outlet.address ?? '');
-  const phone = normalizeNullableString(outlet.phone ?? '');
+  const address = normalizeNullableString(place.address ?? '');
+  const phone = normalizeNullableString(place.phone ?? '');
+  const logoPath = normalizeNullableString(place.logoPath ?? '');
+  const type = normalizeNullableString(place.type ?? '');
 
   if (address !== null) {
     normalized.address = address;
@@ -79,21 +81,37 @@ function normalizeOutletSeed(outlet) {
     normalized.phone = phone;
   }
 
+  if (logoPath !== null) {
+    normalized.logoPath = logoPath;
+  }
+
+  if (type !== null) {
+    normalized.type = type;
+  }
+
   return normalized;
 }
 
-function buildOutletPersistenceData(outlet) {
+function buildPlacePersistenceData(place) {
   const data = {
-    name: outlet.name,
-    isActive: typeof outlet.isActive === 'boolean' ? outlet.isActive : true,
+    name: place.name,
+    isActive: typeof place.isActive === 'boolean' ? place.isActive : true,
   };
 
-  if (Object.prototype.hasOwnProperty.call(outlet, 'address')) {
-    data.address = outlet.address ?? null;
+  if (Object.prototype.hasOwnProperty.call(place, 'address')) {
+    data.address = place.address ?? null;
   }
 
-  if (Object.prototype.hasOwnProperty.call(outlet, 'phone')) {
-    data.phone = outlet.phone ?? null;
+  if (Object.prototype.hasOwnProperty.call(place, 'phone')) {
+    data.phone = place.phone ?? null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(place, 'logoPath')) {
+    data.logoPath = place.logoPath ?? null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(place, 'type')) {
+    data.type = place.type ?? null;
   }
 
   return data;
@@ -122,8 +140,8 @@ function parseAdditionalAccountSeeds() {
   }
 }
 
-function parseAdditionalOutletSeeds() {
-  const raw = envOrDefault('SEED_ADDITIONAL_OUTLETS');
+function parseAdditionalPlaceSeeds() {
+  const raw = envOrDefault('SEED_ADDITIONAL_PLACES', envOrDefault('SEED_ADDITIONAL_OUTLETS'));
 
   if (!raw) {
     return [];
@@ -133,14 +151,14 @@ function parseAdditionalOutletSeeds() {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
       // eslint-disable-next-line no-console
-      console.warn('SEED_ADDITIONAL_OUTLETS must be a JSON array of outlet objects');
+      console.warn('SEED_ADDITIONAL_PLACES must be a JSON array of place objects');
       return [];
     }
 
-    return parsed.map(normalizeOutletSeed).filter(Boolean);
+    return parsed.map(normalizePlaceSeed).filter(Boolean);
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.warn('Failed to parse SEED_ADDITIONAL_OUTLETS JSON:', error.message);
+    console.warn('Failed to parse SEED_ADDITIONAL_PLACES JSON:', error.message);
     return [];
   }
 }
@@ -151,8 +169,8 @@ const permissionCatalog = [
     description: 'Manage company profile, subscription, and billing settings.',
   },
   {
-    name: 'manage_outlets',
-    description: 'Create and update outlet information and operating hours.',
+    name: 'manage_places',
+    description: 'Create and update place information and operating hours.',
   },
   {
     name: 'manage_staff',
@@ -219,7 +237,7 @@ const roleDefinitions = [
     description: 'Outlet manager responsible for day-to-day operations.',
     permissions: [
       'manage_company_profile',
-      'manage_outlets',
+      'manage_places',
       'manage_staff',
       'manage_menus',
       'manage_inventory',
@@ -274,16 +292,27 @@ const roleDefinitions = [
   },
 ];
 
-const defaultOutletSeeds = [
-  normalizeOutletSeed({
-    name: envOrDefault('SEED_OUTLET_NAME', 'Main Outlet'),
-    address: envOrDefault('SEED_OUTLET_ADDRESS', ''),
-    phone: envOrDefault('SEED_OUTLET_PHONE', ''),
+const defaultPlaceSeeds = [
+  normalizePlaceSeed({
+    name: envOrDefault(
+      'SEED_PLACE_NAME',
+      envOrDefault('SEED_OUTLET_NAME', 'Main Outlet')
+    ),
+    address: envOrDefault(
+      'SEED_PLACE_ADDRESS',
+      envOrDefault('SEED_OUTLET_ADDRESS', '')
+    ),
+    phone: envOrDefault(
+      'SEED_PLACE_PHONE',
+      envOrDefault('SEED_OUTLET_PHONE', '')
+    ),
+    logoPath: envOrDefault('SEED_PLACE_LOGO', ''),
+    type: envOrDefault('SEED_PLACE_TYPE', 'outlet'),
     isActive: true,
   }),
 ].filter(Boolean);
 
-const outletSeeds = [...defaultOutletSeeds, ...parseAdditionalOutletSeeds()];
+const placeSeeds = [...defaultPlaceSeeds, ...parseAdditionalPlaceSeeds()];
 
 const defaultAccountSeeds = [
   normalizeAccountSeed({
@@ -314,20 +343,20 @@ const defaultAccountSeeds = [
 const accountSeeds = [...defaultAccountSeeds, ...parseAdditionalAccountSeeds()];
 
 async function main() {
-  for (const outlet of outletSeeds) {
-    const existing = await prisma.outlet.findFirst({
-      where: { name: outlet.name },
+  for (const place of placeSeeds) {
+    const existing = await prisma.place.findFirst({
+      where: { name: place.name },
     });
 
     if (existing) {
-      const updateData = buildOutletPersistenceData({ ...existing, ...outlet });
-      await prisma.outlet.update({
+      const updateData = buildPlacePersistenceData({ ...existing, ...place });
+      await prisma.place.update({
         where: { id: existing.id },
         data: updateData,
       });
     } else {
-      const createData = buildOutletPersistenceData(outlet);
-      await prisma.outlet.create({ data: createData });
+      const createData = buildPlacePersistenceData(place);
+      await prisma.place.create({ data: createData });
     }
   }
 
@@ -411,7 +440,7 @@ async function main() {
       where: {
         userId: user.id,
         roleId: role.id,
-        outletId: null,
+        placeId: null,
       },
     });
 
@@ -420,7 +449,7 @@ async function main() {
         data: {
           userId: user.id,
           roleId: role.id,
-          outletId: null,
+          placeId: null,
         },
       });
     }

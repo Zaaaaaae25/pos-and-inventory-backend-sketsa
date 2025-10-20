@@ -1,7 +1,7 @@
 import PrismaUserRepository from '../Repositories/PrismaUserRepository.js';
-import PrismaOutletRepository from '../Repositories/PrismaOutletRepository.js';
+import PrismaPlaceRepository from '../Repositories/PrismaPlaceRepository.js';
 import UserService from '../../Applications/Users/Services/UserService.js';
-import OutletService from '../../Applications/Outlets/Services/OutletService.js';
+import PlaceService from '../../Applications/Places/Services/PlaceService.js';
 import {
   ListUsersUsecase,
   GetUserUsecase,
@@ -17,21 +17,21 @@ export default function registerUserContainer({ container, overrides = {}, prism
 
   const userService = overrides.userService ?? new UserService({ userRepository });
 
-  let outletService =
-    overrides.userOutletService ??
-    overrides.outletService ??
-    (container?.has('outletService') ? container.get('outletService') : null);
+  let placeService =
+    overrides.userPlaceService ??
+    overrides.placeService ??
+    (container?.has('placeService') ? container.get('placeService') : null);
 
-  if (!outletService && prisma) {
-    const outletRepository =
-      overrides.userOutletRepository ?? new PrismaOutletRepository({ prisma });
-    outletService = new OutletService({ outletRepository });
+  if (!placeService && prisma) {
+    const placeRepository =
+      overrides.userPlaceRepository ?? new PrismaPlaceRepository({ prisma });
+    placeService = new PlaceService({ placeRepository });
   }
 
-  if (!outletService) {
-    outletService = {
-      supportsOutletValidation: false,
-      async getOutlet() {
+  if (!placeService) {
+    placeService = {
+      supportsPlaceValidation: false,
+      async getPlace() {
         return null;
       },
     };
@@ -44,10 +44,10 @@ export default function registerUserContainer({ container, overrides = {}, prism
     overrides.getUserUsecase ?? new GetUserUsecase({ userService });
 
   const createUserUsecase =
-    overrides.createUserUsecase ?? new CreateUserUsecase({ userService, outletService });
+    overrides.createUserUsecase ?? new CreateUserUsecase({ userService, placeService });
 
   const updateUserUsecase =
-    overrides.updateUserUsecase ?? new UpdateUserUsecase({ userService, outletService });
+    overrides.updateUserUsecase ?? new UpdateUserUsecase({ userService, placeService });
 
   const userPresenter = overrides.userPresenter ?? new UserPresenter();
 

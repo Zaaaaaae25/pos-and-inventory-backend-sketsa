@@ -1,0 +1,43 @@
+/// ========== PLACES ==========
+model Place {
+  id       Int     @id @default(autoincrement())
+  name     String
+  address  String?
+  phone    String?
+  logoPath String? @map("logo_path")
+  type     String?
+  isActive Boolean @default(true) @map("is_active")
+
+  // relations
+  userRoles            UserRole[]
+  cashierShifts        CashierShift[]
+  menus                Menu[]
+  tables               Table[]
+  placeStocks          PlaceStock[]
+  transactions         Transaction[] @relation("PlaceTransactions")
+  promotions           Promotion[]
+  purchaseOrders       PurchaseOrder[]
+  reportFiles          ReportFile[]
+  deliveryIntegrations DeliveryIntegration[]
+  stockTransfersFrom   StockTransfer[] @relation("StockTransferFrom")
+  stockTransfersTo     StockTransfer[] @relation("StockTransferTo")
+  wastes               Waste[]
+  inventoryStockDaily  InventoryStockDaily[]
+
+  @@map("places")
+}
+
+model PlaceStock {
+  id           Int     @id @default(autoincrement())
+  placeId      Int     @map("place_id")
+  ingredientId Int     @map("ingredient_id")
+  qty          Decimal @db.Decimal(12, 2) @default(0)
+  unitId       Int     @map("unit_id")
+
+  place      Place      @relation(fields: [placeId], references: [id], onDelete: Restrict)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+  unit       Unit       @relation(fields: [unitId], references: [id], onDelete: Restrict)
+
+  @@unique([placeId, ingredientId, unitId])
+  @@map("place_stocks")
+}

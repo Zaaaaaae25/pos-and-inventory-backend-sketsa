@@ -61,7 +61,7 @@ export default class PrismaUserRepository extends UserRepository {
     });
   }
 
-  async createUser({ userData, roleId, outletId }) {
+  async createUser({ userData, roleId, placeId }) {
     return this._prisma.$transaction(async (tx) => {
       const createdUser = await tx.user.create({ data: userData });
 
@@ -69,7 +69,7 @@ export default class PrismaUserRepository extends UserRepository {
         data: {
           userId: createdUser.id,
           roleId,
-          outletId: outletId ?? null,
+          placeId: placeId ?? null,
         },
       });
 
@@ -80,7 +80,7 @@ export default class PrismaUserRepository extends UserRepository {
     });
   }
 
-  async updateUser({ id, userData, roleId, outletId }) {
+  async updateUser({ id, userData, roleId, placeId }) {
     return this._prisma.$transaction(async (tx) => {
       const savedUser = await tx.user.update({
         where: { id },
@@ -96,7 +96,7 @@ export default class PrismaUserRepository extends UserRepository {
           where: { id: assignment.id },
           data: {
             roleId,
-            outletId: outletId ?? assignment.outletId ?? null,
+            placeId: placeId ?? assignment.placeId ?? null,
           },
         });
       } else {
@@ -104,7 +104,7 @@ export default class PrismaUserRepository extends UserRepository {
           data: {
             userId: savedUser.id,
             roleId,
-            outletId: outletId ?? null,
+            placeId: placeId ?? null,
           },
         });
       }

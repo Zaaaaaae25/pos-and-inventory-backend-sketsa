@@ -1,20 +1,29 @@
 /// ========== MENUS ==========
 model Menu {
   id          Int      @id @default(autoincrement())
-  outletId    Int?     @map("outlet_id")
+  placeId     Int?     @map("place_id")
   name        String
-  category    String
+  categoryId  Int?     @map("category_id")
   description String?
   isActive    Boolean  @default(true) @map("is_active")
 
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
-  variants MenuVariant[]
-  prices   MenuPrice[]
-  recipes  Recipe[]
+  place     Place?    @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  category  Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants  MenuVariant[]
+  prices    MenuPrice[]
+  recipes   Recipe[]
   transactionItems TransactionItem[]
-  promotionItems   PromotionItem[]
 
   @@map("menus")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  menus Menu[]
+
+  @@map("categories")
 }
 
 model MenuVariant {
@@ -23,6 +32,7 @@ model MenuVariant {
   name   String
 
   menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items MenuVariantItem[]
   transactionItemVariants TransactionItemVariant[]
 
   @@map("menu_variants")
@@ -32,9 +42,20 @@ model MenuPrice {
   id        Int      @id @default(autoincrement())
   menuId    Int      @map("menu_id")
   price     Decimal  @db.Decimal(12, 2)
-  validFrom DateTime @map("valid_from")
+  effectiveDate DateTime @map("effective_date") @db.Date
 
   menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
 
   @@map("menu_prices")
+}
+
+model MenuVariantItem {
+  id             Int     @id @default(autoincrement())
+  menuVariantId  Int     @map("menu_variant_id")
+  name           String
+  additionalPrice Decimal @db.Decimal(12, 2) @default(0) @map("additional_price")
+
+  menuVariant MenuVariant @relation(fields: [menuVariantId], references: [id], onDelete: Cascade)
+
+  @@map("menu_variant_items")
 }

@@ -33,12 +33,14 @@ model SupplierProduct {
 
 model PurchaseOrder {
   id         Int      @id @default(autoincrement())
-  outletId   Int      @map("outlet_id")
+  placeId    Int      @map("place_id")
   supplierId Int      @map("supplier_id")
+  type       String? 
+  note       String?
   status     String   @default("draft")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  outlet   Outlet   @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  place    Place    @relation(fields: [placeId], references: [id], onDelete: Restrict)
   supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
 
   items         PurchaseOrderItem[]
@@ -56,6 +58,7 @@ model PurchaseOrderItem {
 
   purchaseOrder     PurchaseOrder     @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   ingredientPackage IngredientPackage @relation(fields: [ingredientPackageId], references: [id], onDelete: Restrict)
+  goodsReceiptItems GoodsReceiptItem[]
 
   @@map("purchase_order_items")
 }

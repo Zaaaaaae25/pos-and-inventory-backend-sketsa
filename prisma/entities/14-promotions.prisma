@@ -1,18 +1,14 @@
 /// ========== PROMOTIONS ==========
 model Promotion {
   id            Int      @id @default(autoincrement())
-  outletId      Int?     @map("outlet_id")
+  placeId       Int?     @map("place_id")
   name          String
-  type          String?
-  discountType  String?  @map("discount_type")
-  discountValue Decimal? @db.Decimal(12, 2) @map("discount_value")
   startAt       DateTime? @map("start_at")
   endAt         DateTime? @map("end_at")
 
-  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  place Place? @relation(fields: [placeId], references: [id], onDelete: SetNull)
 
   rules PromotionRule[]
-  items PromotionItem[]
 
   @@map("promotions")
 }
@@ -26,15 +22,4 @@ model PromotionRule {
   promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
 
   @@map("promotion_rules")
-}
-
-model PromotionItem {
-  id          Int  @id @default(autoincrement())
-  promotionId Int  @map("promotion_id")
-  menuId      Int? @map("menu_id")
-
-  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
-  menu      Menu?     @relation(fields: [menuId], references: [id], onDelete: SetNull)
-
-  @@map("promotion_items")
 }

@@ -15,11 +15,11 @@ export default class UserRepository {
     throw new Error('USER_REPOSITORY.METHOD_NOT_IMPLEMENTED');
   }
 
-  async createUser({ userData, roleId, outletId }) {
+  async createUser({ userData, roleId, placeId }) {
     throw new Error('USER_REPOSITORY.METHOD_NOT_IMPLEMENTED');
   }
 
-  async updateUser({ id, userData, roleId, outletId }) {
+  async updateUser({ id, userData, roleId, placeId }) {
     throw new Error('USER_REPOSITORY.METHOD_NOT_IMPLEMENTED');
   }
 }

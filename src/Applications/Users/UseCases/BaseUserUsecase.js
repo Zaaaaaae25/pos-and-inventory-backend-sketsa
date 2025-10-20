@@ -1,13 +1,13 @@
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
 
 export default class BaseUserUsecase {
-  constructor({ userService, outletService } = {}) {
+  constructor({ userService, placeService } = {}) {
     if (!userService) {
       throw new Error('USER_USECASE.MISSING_USER_SERVICE');
     }
 
     this.userService = userService;
-    this.outletService = outletService ?? null;
+    this.placeService = placeService ?? null;
   }
 
   async _findRole(roleName) {
@@ -50,27 +50,27 @@ export default class BaseUserUsecase {
     }
   }
 
-  async _assertOutletExists(outletId) {
-    if (outletId === undefined || outletId === null) {
+  async _assertPlaceExists(placeId) {
+    if (placeId === undefined || placeId === null) {
       return null;
     }
 
-    const normalizedId = Number(outletId);
+    const normalizedId = Number(placeId);
     if (!Number.isInteger(normalizedId) || normalizedId <= 0) {
-      throw new ValidationError('Outlet id must be a positive integer');
+      throw new ValidationError('Place id must be a positive integer');
     }
 
-    if (!this.outletService || typeof this.outletService.getOutlet !== 'function') {
-      throw new Error('USER_USECASE.MISSING_OUTLET_SERVICE');
+    if (!this.placeService || typeof this.placeService.getPlace !== 'function') {
+      throw new Error('USER_USECASE.MISSING_PLACE_SERVICE');
     }
 
-    if (this.outletService.supportsOutletValidation === false) {
+    if (this.placeService.supportsPlaceValidation === false) {
       return normalizedId;
     }
 
-    const outlet = await this.outletService.getOutlet(normalizedId);
-    if (!outlet) {
-      throw new ValidationError('Outlet not found');
+    const place = await this.placeService.getPlace(normalizedId);
+    if (!place) {
+      throw new ValidationError('Place not found');
     }
 
     return normalizedId;

@@ -81,25 +81,25 @@ export default class UpdateUserUsecase extends BaseUserUsecase {
       userData.pinCodeHash = null;
     }
 
-    const requestedOutletId =
-      payload.outletId !== undefined ? payload.outletId : existingUser.outletId;
-    const outletId = await this._assertOutletExists(requestedOutletId ?? null);
+    const requestedPlaceId =
+      payload.placeId ?? payload.outletId ?? existingUser.placeId ?? null;
+    const placeId = await this._assertPlaceExists(requestedPlaceId ?? null);
 
     try {
       const updated = await this.userService.updateUser({
         id: existingUser.id,
         userData,
         roleId: role.id,
-        outletId,
+        placeId,
       });
 
       return User.fromPersistence(updated);
     } catch (error) {
       if (
         error?.code === 'P2003' &&
-        error?.meta?.constraint === 'user_roles_outlet_id_fkey'
+        error?.meta?.constraint === 'user_roles_place_id_fkey'
       ) {
-        throw new ValidationError('Outlet not found');
+        throw new ValidationError('Place not found');
       }
 
       throw error;
