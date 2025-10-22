@@ -1,5 +1,8 @@
 import express from '../../../Infrastructures/WebServer/ExpressShim.js';
 import adapt from '../ExpressAdapter.js';
+import { validateRequest, schemas as validationSchemas } from '../Validators/Index.js';
+
+const { users: userSchemas, common: commonSchemas } = validationSchemas;
 
 export default function registerUserRoutes(app, { controller }) {
   if (!controller) {
@@ -9,9 +12,24 @@ export default function registerUserRoutes(app, { controller }) {
   const router = express.Router();
 
   router.get('/', adapt(controller.listUsers.bind(controller)));
-  router.post('/', adapt(controller.createUser.bind(controller)));
-  router.get('/:id', adapt(controller.getUser.bind(controller)));
-  router.patch('/:id', adapt(controller.updateUser.bind(controller)));
+  router.post(
+    '/',
+    validateRequest({ body: userSchemas.create }),
+    adapt(controller.createUser.bind(controller)),
+  );
+  router.get(
+    '/:id',
+    validateRequest({ params: commonSchemas.idParam }),
+    adapt(controller.getUser.bind(controller)),
+  );
+  router.patch(
+    '/:id',
+    validateRequest({
+      params: commonSchemas.idParam,
+      body: userSchemas.update,
+    }),
+    adapt(controller.updateUser.bind(controller)),
+  );
 
   app.use('/api/users', router);
 }

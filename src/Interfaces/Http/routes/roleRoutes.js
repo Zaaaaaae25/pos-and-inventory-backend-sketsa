@@ -1,5 +1,8 @@
 import express from '../../../Infrastructures/WebServer/ExpressShim.js';
 import adapt from '../ExpressAdapter.js';
+import { validateRequest, schemas as validationSchemas } from '../Validators/Index.js';
+
+const { roles: roleSchemas, common: commonSchemas } = validationSchemas;
 
 export default function registerRoleRoutes(app, { controller }) {
   if (!controller) {
@@ -9,10 +12,29 @@ export default function registerRoleRoutes(app, { controller }) {
   const router = express.Router();
 
   router.get('/', adapt(controller.listRoles.bind(controller)));
-  router.post('/', adapt(controller.createRole.bind(controller)));
-  router.get('/:id', adapt(controller.getRole.bind(controller)));
-  router.put('/:id', adapt(controller.updateRole.bind(controller)));
-  router.delete('/:id', adapt(controller.deleteRole.bind(controller)));
+  router.post(
+    '/',
+    validateRequest({ body: roleSchemas.create }),
+    adapt(controller.createRole.bind(controller)),
+  );
+  router.get(
+    '/:id',
+    validateRequest({ params: commonSchemas.idParam }),
+    adapt(controller.getRole.bind(controller)),
+  );
+  router.put(
+    '/:id',
+    validateRequest({
+      params: commonSchemas.idParam,
+      body: roleSchemas.update,
+    }),
+    adapt(controller.updateRole.bind(controller)),
+  );
+  router.delete(
+    '/:id',
+    validateRequest({ params: commonSchemas.idParam }),
+    adapt(controller.deleteRole.bind(controller)),
+  );
 
   app.use('/api/roles', router);
 }
