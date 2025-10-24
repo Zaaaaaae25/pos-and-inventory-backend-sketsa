@@ -5,6 +5,14 @@ import { disconnectPrisma } from '../DatabaseConfig.js';
 import registerUserRoutes from '../../Interfaces/Http/routes/userRoutes.js';
 import registerRoleRoutes from '../../Interfaces/Http/routes/roleRoutes.js';
 import registerPlaceRoutes from '../../Interfaces/Http/routes/placeRoutes.js';
+import registerPermissionRoutes from '../../Interfaces/Http/routes/permissionRoutes.js';
+import registerUnitRoutes from '../../Interfaces/Http/routes/unitRoutes.js';
+import registerTableRoutes from '../../Interfaces/Http/routes/tableRoutes.js';
+import registerIngredientRoutes from '../../Interfaces/Http/routes/ingredientRoutes.js';
+import registerPackageRoutes from '../../Interfaces/Http/routes/packageRoutes.js';
+import registerIngredientPackageRoutes from '../../Interfaces/Http/routes/ingredientPackageRoutes.js';
+import registerSupplierRoutes from '../../Interfaces/Http/routes/supplierRoutes.js';
+import registerSupplierProductRoutes from '../../Interfaces/Http/routes/supplierProductRoutes.js';
 import registerAuthRoutes from '../../Interfaces/Http/routes/authRoutes.js';
 import errorHandler from '../../Interfaces/Middlewares/ErrorHandler.js';
 import createContainer from '../Containers/index.js';
@@ -19,12 +27,28 @@ export function createExpressApp({ container } = {}) {
   const userController = diContainer.resolve('userController');
   const roleController = diContainer.resolve('roleController');
   const placeController = diContainer.resolve('placeController');
+  const permissionController = diContainer.resolve('permissionController');
+  const unitController = diContainer.resolve('unitController');
+  const tableController = diContainer.resolve('tableController');
+  const ingredientController = diContainer.resolve('ingredientController');
+  const packageController = diContainer.resolve('packageController');
+  const ingredientPackageController = diContainer.resolve('ingredientPackageController');
+  const supplierController = diContainer.resolve('supplierController');
+  const supplierProductController = diContainer.resolve('supplierProductController');
   const authController = diContainer.resolve('authController');
   const optionalAuth = diContainer.resolve('optionalAuth');
 
   registerUserRoutes(app, { controller: userController });
   registerRoleRoutes(app, { controller: roleController });
   registerPlaceRoutes(app, { controller: placeController });
+  registerPermissionRoutes(app, { controller: permissionController });
+  registerUnitRoutes(app, { controller: unitController });
+  registerTableRoutes(app, { controller: tableController });
+  registerIngredientRoutes(app, { controller: ingredientController });
+  registerPackageRoutes(app, { controller: packageController });
+  registerIngredientPackageRoutes(app, { controller: ingredientPackageController });
+  registerSupplierRoutes(app, { controller: supplierController });
+  registerSupplierProductRoutes(app, { controller: supplierProductController });
   registerAuthRoutes(app, { controller: authController, optionalAuth });
 
   app.get('/api/docs.json', (req, res) => {
