@@ -455,6 +455,373 @@ async function main() {
     }
   }
 
+  // ==== Domain seeds for Units, Ingredients, Packages, IngredientPackages, Suppliers, SupplierProducts, Tables ====
+  // Units
+  const unitDefs = [
+    { name: 'gram', abbreviation: 'g' },
+    { name: 'kilogram', abbreviation: 'kg' },
+    { name: 'liter', abbreviation: 'l' },
+    { name: 'piece', abbreviation: 'pc' },
+  ];
+
+  const unitRecords = {};
+  for (const u of unitDefs) {
+    const rec = await prisma.unit.upsert({
+      where: { name: u.name },
+      update: { abbreviation: u.abbreviation },
+      create: u,
+    });
+    unitRecords[u.name] = rec;
+  }
+
+  // Ingredients
+  const ingredientDefs = [
+    { name: 'Gula', unitName: 'gram' },
+    { name: 'Tepung', unitName: 'gram' },
+    { name: 'Minyak', unitName: 'liter' },
+    { name: 'Telur', unitName: 'piece' },
+  ];
+
+  const ingredientRecords = {};
+  for (const ing of ingredientDefs) {
+    const unit = unitRecords[ing.unitName];
+    if (!unit) continue; // safety
+
+    const existing = await prisma.ingredient.findFirst({ where: { name: ing.name } });
+    let rec;
+    if (existing) {
+      rec = await prisma.ingredient.update({ where: { id: existing.id }, data: { unitId: unit.id } });
+    } else {
+      rec = await prisma.ingredient.create({ data: { name: ing.name, unitId: unit.id } });
+    }
+    ingredientRecords[ing.name] = rec;
+  }
+
+  // Packages
+  const packageDefs = [
+    { name: 'sachet', description: 'Kemasan kecil 10g' },
+    { name: 'pack', description: 'Isi 1kg' },
+    { name: 'bottle', description: 'Botol 1L' },
+  ];
+
+  const packageRecords = {};
+  for (const p of packageDefs) {
+    const rec = await prisma.package.upsert({
+      where: { name: p.name },
+      update: { description: p.description ?? null },
+      create: p,
+    });
+    packageRecords[p.name] = rec;
+  }
+
+  // IngredientPackages (quantities per package)
+  const ingredientPackageDefs = [
+    { ingredientName: 'Gula', packageName: 'sachet', qty: 10 },
+    { ingredientName: 'Gula', packageName: 'pack', qty: 1000 },
+    { ingredientName: 'Minyak', packageName: 'bottle', qty: 1 },
+  ];
+
+  for (const ip of ingredientPackageDefs) {
+    const ingredient = ingredientRecords[ip.ingredientName];
+    const pkg = packageRecords[ip.packageName];
+    if (!ingredient || !pkg) continue;
+
+    const existing = await prisma.ingredientPackage.findFirst({
+      where: { ingredientId: ingredient.id, packageId: pkg.id },
+    });
+
+    if (existing) {
+      await prisma.ingredientPackage.update({
+        where: { id: existing.id },
+        data: { qty: ip.qty },
+      });
+    } else {
+      await prisma.ingredientPackage.create({
+        data: { ingredientId: ingredient.id, packageId: pkg.id, qty: ip.qty },
+      });
+    }
+  }
+
+  // Suppliers
+  const supplierDefs = [
+    { name: 'PT Sumber Rejeki', contactName: 'Budi', phone: '+62-812-1111-2222' },
+    { name: 'CV Maju Bersama', contactName: 'Siti', phone: '+62-813-3333-4444' },
+  ];
+
+  const supplierRecords = {};
+  for (const s of supplierDefs) {
+    const existing = await prisma.supplier.findFirst({ where: { name: s.name } });
+    let rec;
+    if (existing) {
+      rec = await prisma.supplier.update({ where: { id: existing.id }, data: s });
+    } else {
+      rec = await prisma.supplier.create({ data: s });
+    }
+    supplierRecords[s.name] = rec;
+  }
+
+  // SupplierProducts
+  const supplierProductDefs = [
+    { supplierName: 'PT Sumber Rejeki', ingredientName: 'Gula', packageName: 'pack', qty: 1, price: 25000, leadTime: 3 },
+    { supplierName: 'CV Maju Bersama', ingredientName: 'Minyak', packageName: 'bottle', qty: 1, price: 32000, leadTime: 2 },
+  ];
+
+  for (const sp of supplierProductDefs) {
+    const supplier = supplierRecords[sp.supplierName];
+    const ingredient = ingredientRecords[sp.ingredientName];
+    const pkg = packageRecords[sp.packageName];
+    if (!supplier || !ingredient || !pkg) continue;
+
+    const existing = await prisma.supplierProduct.findFirst({
+      where: {
+        supplierId: supplier.id,
+        ingredientId: ingredient.id,
+        packageId: pkg.id,
+      },
+    });
+
+    const payload = {
+      supplierId: supplier.id,
+      ingredientId: ingredient.id,
+      packageId: pkg.id,
+      qty: sp.qty,
+      price: sp.price,
+      leadTime: sp.leadTime,
+      isActive: true,
+    };
+
+    if (existing) {
+      await prisma.supplierProduct.update({ where: { id: existing.id }, data: payload });
+    } else {
+      await prisma.supplierProduct.create({ data: payload });
+    }
+  }
+
+  // Tables (need a place)
+  const mainPlace = await prisma.place.findFirst({ orderBy: { id: 'asc' } });
+  if (mainPlace) {
+    const tableDefs = [
+      { placeId: mainPlace.id, name: 'T-01', status: 'available' },
+      { placeId: mainPlace.id, name: 'T-02', status: 'available' },
+      { placeId: mainPlace.id, name: 'T-03', status: 'available' },
+    ];
+
+    for (const t of tableDefs) {
+      const existing = await prisma.table.findFirst({ where: { placeId: t.placeId, name: t.name } });
+      if (existing) {
+        await prisma.table.update({ where: { id: existing.id }, data: { status: t.status } });
+      } else {
+        await prisma.table.create({ data: t });
+      }
+    }
+  }
+
+  // ==== Menu master seeds (Categories, Menus, MenuPrices, MenuVariants, MenuVariantItems, Recipes)
+  // Categories
+  const categoryDefs = [
+    { name: 'beverages' },
+    { name: 'food' },
+  ];
+
+  const categoryRecords = {};
+  for (const c of categoryDefs) {
+    const rec = await prisma.category.upsert({
+      where: { name: c.name },
+      update: {},
+      create: c,
+    });
+    categoryRecords[c.name] = rec;
+  }
+
+  // Menus
+  const menuDefs = [
+    { name: 'Es Teh', placeId: mainPlace?.id ?? null, categoryName: 'beverages', description: 'Teh manis dingin', isActive: true },
+    { name: 'Nasi Goreng', placeId: mainPlace?.id ?? null, categoryName: 'food', description: 'Nasi goreng spesial', isActive: true },
+  ];
+
+  const menuRecords = {};
+  for (const m of menuDefs) {
+    const category = m.categoryName ? categoryRecords[m.categoryName] : null;
+    const data = {
+      name: m.name,
+      placeId: m.placeId ?? null,
+      categoryId: category ? category.id : null,
+      description: m.description ?? null,
+      isActive: m.isActive !== false,
+    };
+
+    const existing = await prisma.menu.findFirst({ where: { name: m.name } });
+    let rec;
+    if (existing) {
+      rec = await prisma.menu.update({ where: { id: existing.id }, data });
+    } else {
+      rec = await prisma.menu.create({ data });
+    }
+    menuRecords[m.name] = rec;
+  }
+
+  // MenuPrices (today's date)
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const priceDefs = [
+    { menuName: 'Es Teh', price: 8000, effectiveDate: todayStr },
+    { menuName: 'Nasi Goreng', price: 25000, effectiveDate: todayStr },
+  ];
+  for (const p of priceDefs) {
+    const menu = menuRecords[p.menuName];
+    if (!menu) continue;
+    // Upsert by (menuId, effectiveDate) uniqueness not defined, so insert if not exists by same pair
+    const exist = await prisma.menuPrice.findFirst({ where: { menuId: menu.id, effectiveDate: new Date(p.effectiveDate) } });
+    if (exist) {
+      await prisma.menuPrice.update({ where: { id: exist.id }, data: { price: p.price } });
+    } else {
+      await prisma.menuPrice.create({ data: { menuId: menu.id, price: p.price, effectiveDate: new Date(p.effectiveDate) } });
+    }
+  }
+
+  // MenuVariants and Items
+  const variantDefs = [
+    { menuName: 'Es Teh', name: 'Sugar' },
+    { menuName: 'Nasi Goreng', name: 'Spicy' },
+  ];
+
+  const variantRecords = {};
+  for (const v of variantDefs) {
+    const menu = menuRecords[v.menuName];
+    if (!menu) continue;
+    const exist = await prisma.menuVariant.findFirst({ where: { menuId: menu.id, name: v.name } });
+    let rec;
+    if (exist) {
+      rec = exist;
+    } else {
+      rec = await prisma.menuVariant.create({ data: { menuId: menu.id, name: v.name } });
+    }
+    variantRecords[`${v.menuName}:${v.name}`] = rec;
+  }
+
+  const variantItemDefs = [
+    { variantKey: 'Es Teh:Sugar', name: 'Normal', additionalPrice: 0 },
+    { variantKey: 'Es Teh:Sugar', name: 'Less', additionalPrice: 0 },
+    { variantKey: 'Es Teh:Sugar', name: 'No Sugar', additionalPrice: 0 },
+    { variantKey: 'Nasi Goreng:Spicy', name: 'Normal', additionalPrice: 0 },
+    { variantKey: 'Nasi Goreng:Spicy', name: 'Hot', additionalPrice: 3000 },
+  ];
+
+  for (const vi of variantItemDefs) {
+    const variant = variantRecords[vi.variantKey];
+    if (!variant) continue;
+    const exist = await prisma.menuVariantItem.findFirst({ where: { menuVariantId: variant.id, name: vi.name } });
+    if (exist) {
+      await prisma.menuVariantItem.update({ where: { id: exist.id }, data: { additionalPrice: vi.additionalPrice } });
+    } else {
+      await prisma.menuVariantItem.create({ data: { menuVariantId: variant.id, name: vi.name, additionalPrice: vi.additionalPrice } });
+    }
+  }
+
+  // Recipes
+  const recipes = [
+    { menuName: 'Es Teh', ingredientName: 'Gula', qty: 10 }, // 10 gram gula
+    { menuName: 'Nasi Goreng', ingredientName: 'Minyak', qty: 0.1 }, // 0.1 liter
+    { menuName: 'Nasi Goreng', ingredientName: 'Telur', qty: 1 },
+  ];
+
+  for (const r of recipes) {
+    const menu = menuRecords[r.menuName];
+    const ingredient = ingredientRecords[r.ingredientName];
+    if (!menu || !ingredient) continue;
+    const exist = await prisma.recipe.findFirst({ where: { menuId: menu.id, ingredientId: ingredient.id } });
+    if (exist) {
+      await prisma.recipe.update({ where: { id: exist.id }, data: { qty: r.qty } });
+    } else {
+      await prisma.recipe.create({ data: { menuId: menu.id, ingredientId: ingredient.id, qty: r.qty } });
+    }
+  }
+
+  // ==== Payment methods and Delivery integrations ====
+  const pmDefs = [
+    { name: 'cash', description: 'Tunai', isActive: true },
+    { name: 'qris', description: 'QRIS', isActive: true },
+  ];
+  for (const pm of pmDefs) {
+    await prisma.paymentMethod.upsert({ where: { name: pm.name }, update: { description: pm.description, isActive: pm.isActive }, create: pm });
+  }
+
+  if (mainPlace) {
+    const diDefs = [
+      { placeId: mainPlace.id, platformName: 'GoFood', apiKey: 'secret', settingsJson: { region: 'ID' } },
+    ];
+    for (const di of diDefs) {
+      const exist = await prisma.deliveryIntegration.findFirst({ where: { placeId: di.placeId, platformName: di.platformName } });
+      if (exist) {
+        await prisma.deliveryIntegration.update({ where: { id: exist.id }, data: di });
+      } else {
+        await prisma.deliveryIntegration.create({ data: di });
+      }
+    }
+  }
+
+  // ==== Report files (dummy) ====
+  // Seed a couple of generated report entries if table is empty
+  const reportFileCount = await prisma.reportFile.count();
+  if (reportFileCount === 0) {
+    const baseDate = new Date();
+    const rfSeeds = [
+      {
+        reportType: 'sales_summary',
+        reportScope: 'daily',
+        reportDate: new Date(baseDate.toISOString().slice(0, 10)),
+        placeId: mainPlace?.id ?? null,
+        fileName: 'sales-summary-today.csv',
+        filePath: '/reports/sales/sales-summary-today.csv',
+      },
+      {
+        reportType: 'inventory_snapshot',
+        reportScope: 'daily',
+        reportDate: new Date(baseDate.toISOString().slice(0, 10)),
+        placeId: mainPlace?.id ?? null,
+        fileName: 'inventory-snapshot-today.csv',
+        filePath: '/reports/inventory/inventory-snapshot-today.csv',
+      },
+    ];
+
+    for (const rf of rfSeeds) {
+      const exist = await prisma.reportFile.findFirst({ where: { filePath: rf.filePath } });
+      if (exist) {
+        await prisma.reportFile.update({ where: { id: exist.id }, data: rf });
+      } else {
+        await prisma.reportFile.create({ data: rf });
+      }
+    }
+  }
+
+  // ==== Activity logs (dummy) ====
+  // Only insert sample logs when table is empty to keep the seed idempotent
+  const activityLogCount = await prisma.activityLog.count();
+  if (activityLogCount === 0) {
+    // Try to attach to an existing seeded user (owner)
+    const ownerUser = await prisma.user.findFirst({ where: { email: 'owner@example.com' } });
+    const uid = ownerUser?.id ?? null;
+
+    const alSeeds = [
+      { userId: uid, action: 'login', entityType: 'auth', entityId: null, contextJson: { ip: '127.0.0.1' } },
+      { userId: uid, action: 'create_menu', entityType: 'menu', entityId: null, contextJson: { name: 'Es Teh' } },
+      { userId: uid, action: 'update_price', entityType: 'menu_price', entityId: null, contextJson: { menu: 'Nasi Goreng', price: 25000 } },
+    ];
+
+    await prisma.activityLog.createMany({ data: alSeeds });
+  }
+
+  // ==== System logs (dummy) ====
+  const systemLogCount = await prisma.systemLog.count();
+  if (systemLogCount === 0) {
+    const slSeeds = [
+      { level: 'info', message: 'Server started', contextJson: { env: process.env.NODE_ENV ?? 'development' } },
+      { level: 'warn', message: 'Low disk space threshold reached', contextJson: { path: '/', percent: 85 } },
+      { level: 'error', message: 'Third-party API timeout', contextJson: { service: 'DeliveryPlatform', timeoutMs: 5000 } },
+    ];
+
+    await prisma.systemLog.createMany({ data: slSeeds });
+  }
+
   // eslint-disable-next-line no-console
   console.log('Database seeding completed successfully.');
 }

@@ -7,9 +7,20 @@ import units from './Unit.js';
 import tables from './Table.js';
 import ingredients from './Ingredient.js';
 import packages from './Package.js';
+import menus from './Menu.js';
+import menuPrices from './MenuPrice.js';
+import menuVariants from './MenuVariant.js';
+import menuVariantItems from './MenuVariantItem.js';
+import recipes from './Recipe.js';
+import paymentMethods from './PaymentMethod.js';
+import deliveryIntegrations from './DeliveryIntegration.js';
+import reportFiles from './ReportFile.js';
+import activityLogs from './ActivityLog.js';
+import systemLogs from './SystemLog.js';
 import ingredientPackages from './IngredientPackage.js';
 import suppliers from './Supplier.js';
 import supplierProducts from './SupplierProduct.js';
+import categories from './Category.js';
 import common from './Common.js';
 
 export default {
@@ -22,8 +33,19 @@ export default {
   tables,
   ingredients,
   packages,
+  menus,
+  menuPrices,
+  menuVariants,
+  menuVariantItems,
+  recipes,
+  paymentMethods,
+  deliveryIntegrations,
+  reportFiles,
+  activityLogs,
+  systemLogs,
   ingredientPackages,
   suppliers,
   supplierProducts,
+  categories,
   common,
 };
