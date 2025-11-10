@@ -822,6 +822,153 @@ async function main() {
     await prisma.systemLog.createMany({ data: slSeeds });
   }
 
+  // ==== Transactions seed (transactions, transaction_items, transaction_item_variants, kitchen_orders)
+  const trxCount = await prisma.transaction.count();
+  if (trxCount === 0) {
+    const anyUser = await prisma.user.findFirst({ orderBy: { id: 'asc' } });
+    const table = mainPlace ? await prisma.table.findFirst({ where: { placeId: mainPlace.id }, orderBy: { id: 'asc' } }) : null;
+    const pmCash = await prisma.paymentMethod.findFirst({ where: { name: 'cash' } });
+
+    if (anyUser) {
+      // Transaction #1 (dine-in)
+      const trx1 = await prisma.transaction.create({
+        data: {
+          cashierId: anyUser.id,
+          placeId: mainPlace?.id ?? null,
+          tableId: table?.id ?? null,
+          orderType: 'dine_in',
+          total: 33000,
+          tax: 3000,
+          discount: 0,
+          paymentMethodId: pmCash?.id ?? null,
+        },
+      });
+
+      // Items for trx1
+      const esTeh = menuRecords?.['Es Teh'];
+      const nasiGoreng = menuRecords?.['Nasi Goreng'];
+
+      const item1 = esTeh
+        ? await prisma.transactionItem.create({ data: { transactionId: trx1.id, menuId: esTeh.id, qty: 1, price: 8000, discount: 0 } })
+        : null;
+      const item2 = nasiGoreng
+        ? await prisma.transactionItem.create({ data: { transactionId: trx1.id, menuId: nasiGoreng.id, qty: 1, price: 22000, discount: 0 } })
+        : null;
+
+      // Variants (link to MenuVariant)
+      if (item1 && typeof variantRecords !== 'undefined') {
+        const sugarVariant = variantRecords['Es Teh:Sugar'];
+        if (sugarVariant) {
+          await prisma.transactionItemVariant.create({ data: { transactionItemId: item1.id, menuVariantId: sugarVariant.id, extraPrice: 0 } });
+        }
+      }
+      if (item2 && typeof variantRecords !== 'undefined') {
+        const spicyVariant = variantRecords['Nasi Goreng:Spicy'];
+        if (spicyVariant) {
+          await prisma.transactionItemVariant.create({ data: { transactionItemId: item2.id, menuVariantId: spicyVariant.id, extraPrice: 3000 } });
+        }
+      }
+
+      // Kitchen orders for each item
+      if (item1) {
+        await prisma.kitchenOrder.create({ data: { transactionItemId: item1.id, status: 'waiting', note: 'Ice please' } });
+      }
+      if (item2) {
+        await prisma.kitchenOrder.create({ data: { transactionItemId: item2.id, status: 'waiting', note: 'Less oil' } });
+      }
+
+      // Transaction #2 (takeaway)
+      const trx2 = await prisma.transaction.create({
+        data: {
+          cashierId: anyUser.id,
+          placeId: mainPlace?.id ?? null,
+          tableId: null,
+          orderType: 'takeaway',
+          total: 8000,
+          tax: 0,
+          discount: 0,
+          paymentMethodId: pmCash?.id ?? null,
+        },
+      });
+
+      if (esTeh) {
+        await prisma.transactionItem.create({ data: { transactionId: trx2.id, menuId: esTeh.id, qty: 1, price: 8000, discount: 0 } });
+      }
+    }
+  }
+
+  // ==== Place Stocks ====
+  const placeStockCount = await prisma.placeStock.count();
+  if (placeStockCount === 0 && mainPlace) {
+    const targetIngredients = ['Gula', 'Minyak', 'Telur'].map((n) => ingredientRecords[n]).filter(Boolean);
+    for (const ing of targetIngredients) {
+      const unitId = ing.unitId;
+      const existing = await prisma.placeStock.findFirst({ where: { placeId: mainPlace.id, ingredientId: ing.id, unitId } });
+      const data = { placeId: mainPlace.id, ingredientId: ing.id, unitId, qty: 100 };
+      if (existing) {
+        await prisma.placeStock.update({ where: { id: existing.id }, data });
+      } else {
+        await prisma.placeStock.create({ data });
+      }
+    }
+  }
+
+  // ==== Inventory stock daily ====
+  const isdCount = await prisma.inventoryStockDaily.count();
+  if (isdCount === 0 && mainPlace) {
+    const today = new Date();
+    const dateOnly = new Date(today.toISOString().slice(0, 10));
+    const ing = ingredientRecords['Gula'] ?? null;
+    if (ing) {
+      const existing = await prisma.inventoryStockDaily.findFirst({ where: { placeId: mainPlace.id, ingredientId: ing.id, date: dateOnly } });
+      const payload = { placeId: mainPlace.id, ingredientId: ing.id, date: dateOnly, openingQty: 100, closingQty: 90, diffQty: -10 };
+      if (existing) {
+        await prisma.inventoryStockDaily.update({ where: { id: existing.id }, data: payload });
+      } else {
+        await prisma.inventoryStockDaily.create({ data: payload });
+      }
+    }
+  }
+
+  // ==== Stock transfers ====
+  const stCount = await prisma.stockTransfer.count();
+  if (stCount === 0) {
+    const places = await prisma.place.findMany({ orderBy: { id: 'asc' } });
+    if (places.length >= 2) {
+      const ing = ingredientRecords['Minyak'] ?? null;
+      if (ing) {
+        await prisma.stockTransfer.create({ data: { ingredientId: ing.id, fromPlaceId: places[0].id, toPlaceId: places[1].id, qty: 5 } });
+      }
+    }
+  }
+
+  // ==== Wastes ====
+  const wasteCount = await prisma.waste.count();
+  if (wasteCount === 0 && mainPlace) {
+    const ing = ingredientRecords['Telur'] ?? null;
+    if (ing) {
+      await prisma.waste.create({ data: { ingredientId: ing.id, placeId: mainPlace.id, qty: 2, reason: 'Expired' } });
+    }
+  }
+
+  // ==== Cashier shifts ====
+  const csCount = await prisma.cashierShift.count();
+  if (csCount === 0 && mainPlace) {
+    const cashier = await prisma.user.findFirst({ orderBy: { id: 'asc' } });
+    if (cashier) {
+      await prisma.cashierShift.create({ data: { placeId: mainPlace.id, cashierId: cashier.id, ipAddress: '127.0.0.1', openingBalance: 0, status: 'open' } });
+    }
+  }
+
+  // ==== Promotions & rules ====
+  const promoCount = await prisma.promotion.count();
+  if (promoCount === 0) {
+    const promo = await prisma.promotion.create({ data: { placeId: mainPlace?.id ?? null, name: 'Happy Hour', startAt: new Date(), endAt: new Date(Date.now() + 7 * 24 * 3600 * 1000) } });
+    await prisma.promotionRule.createMany({ data: [
+      { promotionId: promo.id, ruleType: 'percentage_discount', value: '10' },
+    ] });
+  }
+
   // eslint-disable-next-line no-console
   console.log('Database seeding completed successfully.');
 }

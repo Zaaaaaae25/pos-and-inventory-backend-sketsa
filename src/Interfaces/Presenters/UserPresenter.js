@@ -5,7 +5,6 @@ export default class UserPresenter {
           id: user.role.id,
           name: user.role.name,
           description: user.role.description,
-          permissions: user.role.permissions,
         }
       : null;
 

@@ -21,6 +21,12 @@ import ingredientPackages from './IngredientPackage.js';
 import suppliers from './Supplier.js';
 import supplierProducts from './SupplierProduct.js';
 import categories from './Category.js';
+import placeStocks from './PlaceStock.js';
+import inventoryStockDaily from './InventoryStockDaily.js';
+import transactions from './Transaction.js';
+import transactionItems from './TransactionItem.js';
+import transactionItemVariants from './TransactionItemVariant.js';
+import kitchenOrders from './KitchenOrder.js';
 import common from './Common.js';
 
 export default {
@@ -47,5 +53,11 @@ export default {
   suppliers,
   supplierProducts,
   categories,
+  placeStocks,
+  inventoryStockDaily,
+  transactions,
+  transactionItems,
+  transactionItemVariants,
+  kitchenOrders,
   common,
 };

@@ -24,6 +24,12 @@ import registerSystemLogRoutes from '../../Interfaces/Http/routes/systemLogRoute
 import registerIngredientPackageRoutes from '../../Interfaces/Http/routes/ingredientPackageRoutes.js';
 import registerSupplierRoutes from '../../Interfaces/Http/routes/supplierRoutes.js';
 import registerSupplierProductRoutes from '../../Interfaces/Http/routes/supplierProductRoutes.js';
+import registerTransactionRoutes from '../../Interfaces/Http/routes/transactionRoutes.js';
+import registerTransactionItemRoutes from '../../Interfaces/Http/routes/transactionItemRoutes.js';
+import registerTransactionItemVariantRoutes from '../../Interfaces/Http/routes/transactionItemVariantRoutes.js';
+import registerKitchenOrderRoutes from '../../Interfaces/Http/routes/kitchenOrderRoutes.js';
+import registerPlaceStockRoutes from '../../Interfaces/Http/routes/placeStockRoutes.js';
+import registerInventoryStockDailyRoutes from '../../Interfaces/Http/routes/inventoryStockDailyRoutes.js';
 import registerAuthRoutes from '../../Interfaces/Http/routes/authRoutes.js';
 import errorHandler from '../../Interfaces/Middlewares/ErrorHandler.js';
 import createContainer from '../Containers/index.js';
@@ -57,6 +63,9 @@ export function createExpressApp({ container } = {}) {
   const ingredientPackageController = diContainer.resolve('ingredientPackageController');
   const supplierController = diContainer.resolve('supplierController');
   const supplierProductController = diContainer.resolve('supplierProductController');
+  const transactionController = diContainer.resolve('transactionController');
+  const placeStockController = diContainer.resolve('placeStockController');
+  const inventoryStockDailyController = diContainer.resolve('inventoryStockDailyController');
   const authController = diContainer.resolve('authController');
   const optionalAuth = diContainer.resolve('optionalAuth');
 
@@ -82,6 +91,12 @@ export function createExpressApp({ container } = {}) {
   registerIngredientPackageRoutes(app, { controller: ingredientPackageController });
   registerSupplierRoutes(app, { controller: supplierController });
   registerSupplierProductRoutes(app, { controller: supplierProductController });
+  registerTransactionRoutes(app, { controller: transactionController });
+  registerTransactionItemRoutes(app, { controller: transactionController });
+  registerTransactionItemVariantRoutes(app, { controller: transactionController });
+  registerKitchenOrderRoutes(app, { controller: transactionController });
+  registerPlaceStockRoutes(app, { controller: placeStockController });
+  registerInventoryStockDailyRoutes(app, { controller: inventoryStockDailyController });
   registerAuthRoutes(app, { controller: authController, optionalAuth });
 
   app.get('/api/docs.json', (req, res) => {
