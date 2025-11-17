@@ -1,3 +1,4 @@
+import Unit from '../../Domains/Units/Entities/Unit.js';
 import UnitRepository from '../../Domains/Units/Repositories/UnitRepository.js';
 
 export default class PrismaUnitRepository extends UnitRepository {
@@ -7,26 +8,31 @@ export default class PrismaUnitRepository extends UnitRepository {
     this._prisma = prisma;
   }
 
-  findAll() {
-    return this._prisma.unit.findMany({ orderBy: { id: 'asc' } });
+  async findAll() {
+    const records = await this._prisma.unit.findMany({ orderBy: { id: 'asc' } });
+    return records.map((record) => Unit.fromPersistence(record));
   }
 
-  findById(id) {
-    return this._prisma.unit.findUnique({ where: { id } });
+  async findById(id) {
+    const record = await this._prisma.unit.findUnique({ where: { id } });
+    return Unit.fromPersistence(record);
   }
 
-  findByName(name) {
+  async findByName(name) {
     if (!name) return null;
-    return this._prisma.unit.findUnique({ where: { name } });
+    const record = await this._prisma.unit.findUnique({ where: { name } });
+    return Unit.fromPersistence(record);
   }
 
-  createUnit(unitData) {
-    return this._prisma.unit.create({ data: unitData });
+  async createUnit(unitData) {
+    const record = await this._prisma.unit.create({ data: unitData });
+    return Unit.fromPersistence(record);
   }
 
   async updateUnit({ id, unitData }) {
     try {
-      return await this._prisma.unit.update({ where: { id }, data: unitData });
+      const record = await this._prisma.unit.update({ where: { id }, data: unitData });
+      return Unit.fromPersistence(record);
     } catch (error) {
       if (error?.code === 'P2025') return null;
       throw error;
@@ -43,4 +49,3 @@ export default class PrismaUnitRepository extends UnitRepository {
     }
   }
 }
-

@@ -1,3 +1,4 @@
+import Table from '../../Domains/Tables/Entities/Table.js';
 import TableRepository from '../../Domains/Tables/Repositories/TableRepository.js';
 
 export default class PrismaTableRepository extends TableRepository {
@@ -7,21 +8,25 @@ export default class PrismaTableRepository extends TableRepository {
     this._prisma = prisma;
   }
 
-  findAll() {
-    return this._prisma.table.findMany({ orderBy: { id: 'asc' } });
+  async findAll() {
+    const records = await this._prisma.table.findMany({ orderBy: { id: 'asc' } });
+    return records.map((record) => Table.fromPersistence(record));
   }
 
-  findById(id) {
-    return this._prisma.table.findUnique({ where: { id } });
+  async findById(id) {
+    const record = await this._prisma.table.findUnique({ where: { id } });
+    return Table.fromPersistence(record);
   }
 
-  createTable(tableData) {
-    return this._prisma.table.create({ data: tableData });
+  async createTable(tableData) {
+    const record = await this._prisma.table.create({ data: tableData });
+    return Table.fromPersistence(record);
   }
 
   async updateTable({ id, tableData }) {
     try {
-      return await this._prisma.table.update({ where: { id }, data: tableData });
+      const record = await this._prisma.table.update({ where: { id }, data: tableData });
+      return Table.fromPersistence(record);
     } catch (error) {
       if (error?.code === 'P2025') return null;
       throw error;
@@ -38,4 +43,3 @@ export default class PrismaTableRepository extends TableRepository {
     }
   }
 }
-

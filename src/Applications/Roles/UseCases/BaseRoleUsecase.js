@@ -1,4 +1,5 @@
 import ValidationError from '../../../Commons/Errors/ValidationError.js';
+import { SYSTEM_ROLE_NAMES, SYSTEM_ROLE_SET } from '../../../Commons/Constants/SystemRoles.js';
 
 export default class BaseRoleUsecase {
   constructor({ roleService } = {}) {
@@ -18,6 +19,12 @@ export default class BaseRoleUsecase {
 
     if (!normalized) {
       throw new ValidationError('Role name is required');
+    }
+
+    if (!SYSTEM_ROLE_SET.has(normalized)) {
+      throw new ValidationError(
+        `Role name must be one of: ${SYSTEM_ROLE_NAMES.join(', ')}`
+      );
     }
 
     const existing = await this.roleService.getRoleByName(normalized);

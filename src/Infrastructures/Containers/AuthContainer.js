@@ -1,4 +1,8 @@
-import { optionalAuth as optionalAuthMiddleware } from '../../Interfaces/Middlewares/AuthMiddleware.js';
+import {
+  optionalAuth as optionalAuthMiddleware,
+  createRequireAuthMiddleware,
+  createAuthorizeMiddleware,
+} from '../../Interfaces/Middlewares/AuthMiddleware.js';
 import { LoginUsecase, LogoutUsecase } from '../../Applications/Auth/UseCases/index.js';
 import AuthController from '../../Interfaces/Controllers/AuthController.js';
 import UserPresenter from '../../Interfaces/Presenters/UserPresenter.js';
@@ -15,6 +19,17 @@ export default function registerAuthContainer({ container, overrides = {} }) {
   if (!userService) {
     throw new Error('AUTH_CONTAINER.MISSING_USER_SERVICE');
   }
+
+  const requireAuth =
+    overrides.requireAuth ??
+    createRequireAuthMiddleware({
+      userService,
+      tokenVerifier: overrides.authTokenVerifier ?? overrides.tokenVerifier ?? undefined,
+    });
+  container.set('requireAuth', requireAuth);
+
+  const authorize = overrides.authorize ?? createAuthorizeMiddleware();
+  container.set('authorize', authorize);
 
   const tokenExpiresIn =
     overrides.tokenExpiresIn ?? process.env.JWT_EXPIRES_IN ?? process.env.JWT_EXPIRATION ?? '1h';

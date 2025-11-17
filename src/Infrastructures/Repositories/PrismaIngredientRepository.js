@@ -1,3 +1,4 @@
+import Ingredient from '../../Domains/Ingredients/Entities/Ingredient.js';
 import IngredientRepository from '../../Domains/Ingredients/Repositories/IngredientRepository.js';
 
 export default class PrismaIngredientRepository extends IngredientRepository {
@@ -7,21 +8,25 @@ export default class PrismaIngredientRepository extends IngredientRepository {
     this._prisma = prisma;
   }
 
-  findAll() {
-    return this._prisma.ingredient.findMany({ orderBy: { id: 'asc' } });
+  async findAll() {
+    const records = await this._prisma.ingredient.findMany({ orderBy: { id: 'asc' } });
+    return records.map((record) => Ingredient.fromPersistence(record));
   }
 
-  findById(id) {
-    return this._prisma.ingredient.findUnique({ where: { id } });
+  async findById(id) {
+    const record = await this._prisma.ingredient.findUnique({ where: { id } });
+    return Ingredient.fromPersistence(record);
   }
 
-  createIngredient(ingredientData) {
-    return this._prisma.ingredient.create({ data: ingredientData });
+  async createIngredient(ingredientData) {
+    const record = await this._prisma.ingredient.create({ data: ingredientData });
+    return Ingredient.fromPersistence(record);
   }
 
   async updateIngredient({ id, ingredientData }) {
     try {
-      return await this._prisma.ingredient.update({ where: { id }, data: ingredientData });
+      const record = await this._prisma.ingredient.update({ where: { id }, data: ingredientData });
+      return Ingredient.fromPersistence(record);
     } catch (error) {
       if (error?.code === 'P2025') return null;
       throw error;
@@ -38,4 +43,3 @@ export default class PrismaIngredientRepository extends IngredientRepository {
     }
   }
 }
-

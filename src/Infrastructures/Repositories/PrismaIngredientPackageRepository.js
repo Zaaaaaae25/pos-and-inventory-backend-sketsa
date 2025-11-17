@@ -1,3 +1,4 @@
+import IngredientPackage from '../../Domains/Ingredients/Entities/IngredientPackage.js';
 import IngredientPackageRepository from '../../Domains/Ingredients/Repositories/IngredientPackageRepository.js';
 
 export default class PrismaIngredientPackageRepository extends IngredientPackageRepository {
@@ -7,26 +8,38 @@ export default class PrismaIngredientPackageRepository extends IngredientPackage
     this._prisma = prisma;
   }
 
-  findAll() {
-    return this._prisma.ingredientPackage.findMany({ orderBy: { id: 'asc' } });
+  async findAll() {
+    const records = await this._prisma.ingredientPackage.findMany({ orderBy: { id: 'asc' } });
+    return records.map((record) => IngredientPackage.fromPersistence(record));
   }
 
-  findById(id) {
-    return this._prisma.ingredientPackage.findUnique({ where: { id } });
+  async findById(id) {
+    const record = await this._prisma.ingredientPackage.findUnique({ where: { id } });
+    return IngredientPackage.fromPersistence(record);
   }
 
-  createIngredientPackage(data) {
-    return this._prisma.ingredientPackage.create({ data });
+  async createIngredientPackage(data) {
+    const record = await this._prisma.ingredientPackage.create({ data });
+    return IngredientPackage.fromPersistence(record);
   }
 
   async updateIngredientPackage({ id, data }) {
-    try { return await this._prisma.ingredientPackage.update({ where: { id }, data }); }
-    catch (error) { if (error?.code === 'P2025') return null; throw error; }
+    try {
+      const record = await this._prisma.ingredientPackage.update({ where: { id }, data });
+      return IngredientPackage.fromPersistence(record);
+    } catch (error) {
+      if (error?.code === 'P2025') return null;
+      throw error;
+    }
   }
 
   async deleteIngredientPackage(id) {
-    try { await this._prisma.ingredientPackage.delete({ where: { id } }); return true; }
-    catch (error) { if (error?.code === 'P2025') return false; throw error; }
+    try {
+      await this._prisma.ingredientPackage.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      if (error?.code === 'P2025') return false;
+      throw error;
+    }
   }
 }
-

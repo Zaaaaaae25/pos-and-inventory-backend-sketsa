@@ -1,3 +1,4 @@
+import Permission from '../../Domains/Permissions/Entities/Permission.js';
 import PermissionRepository from '../../Domains/Permissions/Repositories/PermissionRepository.js';
 
 export default class PrismaPermissionRepository extends PermissionRepository {
@@ -10,25 +11,30 @@ export default class PrismaPermissionRepository extends PermissionRepository {
   }
 
   async findAll() {
-    return this._prisma.permission.findMany({ orderBy: { id: 'asc' } });
+    const records = await this._prisma.permission.findMany({ orderBy: { id: 'asc' } });
+    return records.map((record) => Permission.fromPersistence(record));
   }
 
   async findById(id) {
-    return this._prisma.permission.findUnique({ where: { id } });
+    const record = await this._prisma.permission.findUnique({ where: { id } });
+    return Permission.fromPersistence(record);
   }
 
   async findByName(name) {
     if (!name) return null;
-    return this._prisma.permission.findUnique({ where: { name } });
+    const record = await this._prisma.permission.findUnique({ where: { name } });
+    return Permission.fromPersistence(record);
   }
 
   async createPermission(permissionData) {
-    return this._prisma.permission.create({ data: permissionData });
+    const record = await this._prisma.permission.create({ data: permissionData });
+    return Permission.fromPersistence(record);
   }
 
   async updatePermission({ id, permissionData }) {
     try {
-      return await this._prisma.permission.update({ where: { id }, data: permissionData });
+      const record = await this._prisma.permission.update({ where: { id }, data: permissionData });
+      return Permission.fromPersistence(record);
     } catch (error) {
       if (error?.code === 'P2025') {
         return null;
@@ -49,4 +55,3 @@ export default class PrismaPermissionRepository extends PermissionRepository {
     }
   }
 }
-

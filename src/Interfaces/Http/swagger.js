@@ -1636,12 +1636,12 @@ export function createOpenApiDocument({ serverUrl = "http://localhost:3000" } = 
             },
             name: {
               type: "string",
-              example: "manager",
+              example: "store_manager",
             },
             description: {
               type: "string",
               nullable: true,
-              example: "Memiliki akses penuh untuk mengelola outlet",
+              example: "Mengelola operasional harian outlet",
             },
             permissions: {
               type: "array",
@@ -1697,7 +1697,7 @@ export function createOpenApiDocument({ serverUrl = "http://localhost:3000" } = 
           properties: {
             name: {
               type: "string",
-              example: "supervisor",
+              example: "admin",
               description: "Nama role unik dan akan disimpan dalam huruf kecil",
             },
             description: {
@@ -1721,7 +1721,7 @@ export function createOpenApiDocument({ serverUrl = "http://localhost:3000" } = 
           properties: {
             name: {
               type: "string",
-              example: "manager",
+              example: "store_manager",
             },
             description: {
               type: "string",
@@ -1818,7 +1818,8 @@ export function createOpenApiDocument({ serverUrl = "http://localhost:3000" } = 
             roleName: {
               type: "string",
               example: "cashier",
-              description: "Nama role yang terdaftar (misal: cashier, manager)",
+              description:
+                "Nama role yang terdaftar (brand_owner, location_owner, admin, store_manager, cashier, chef, purchaising, waiters)",
             },
             email: {
               type: "string",
@@ -1863,7 +1864,7 @@ export function createOpenApiDocument({ serverUrl = "http://localhost:3000" } = 
             },
             roleName: {
               type: "string",
-              example: "manager",
+              example: "store_manager",
             },
             email: {
               type: "string",

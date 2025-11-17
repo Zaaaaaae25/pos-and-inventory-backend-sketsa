@@ -23,6 +23,11 @@ import supplierProducts from './SupplierProduct.js';
 import categories from './Category.js';
 import placeStocks from './PlaceStock.js';
 import inventoryStockDaily from './InventoryStockDaily.js';
+import stockTransfers from './StockTransfer.js';
+import wastes from './Waste.js';
+import cashierShifts from './CashierShift.js';
+import promotions from './Promotion.js';
+import promotionRules from './PromotionRule.js';
 import transactions from './Transaction.js';
 import transactionItems from './TransactionItem.js';
 import transactionItemVariants from './TransactionItemVariant.js';
@@ -55,6 +60,11 @@ export default {
   categories,
   placeStocks,
   inventoryStockDaily,
+  stockTransfers,
+  wastes,
+  cashierShifts,
+  promotions,
+  promotionRules,
   transactions,
   transactionItems,
   transactionItemVariants,

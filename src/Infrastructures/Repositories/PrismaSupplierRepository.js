@@ -1,3 +1,4 @@
+import Supplier from '../../Domains/Suppliers/Entities/Supplier.js';
 import SupplierRepository from '../../Domains/Suppliers/Repositories/SupplierRepository.js';
 
 export default class PrismaSupplierRepository extends SupplierRepository {
@@ -7,16 +8,38 @@ export default class PrismaSupplierRepository extends SupplierRepository {
     this._prisma = prisma;
   }
 
-  findAll() { return this._prisma.supplier.findMany({ orderBy: { id: 'asc' } }); }
-  findById(id) { return this._prisma.supplier.findUnique({ where: { id } }); }
-  createSupplier(data) { return this._prisma.supplier.create({ data }); }
-  async updateSupplier({ id, data }) {
-    try { return await this._prisma.supplier.update({ where: { id }, data }); }
-    catch (error) { if (error?.code === 'P2025') return null; throw error; }
+  async findAll() {
+    const records = await this._prisma.supplier.findMany({ orderBy: { id: 'asc' } });
+    return records.map((record) => Supplier.fromPersistence(record));
   }
+
+  async findById(id) {
+    const record = await this._prisma.supplier.findUnique({ where: { id } });
+    return Supplier.fromPersistence(record);
+  }
+
+  async createSupplier(data) {
+    const record = await this._prisma.supplier.create({ data });
+    return Supplier.fromPersistence(record);
+  }
+
+  async updateSupplier({ id, data }) {
+    try {
+      const record = await this._prisma.supplier.update({ where: { id }, data });
+      return Supplier.fromPersistence(record);
+    } catch (error) {
+      if (error?.code === 'P2025') return null;
+      throw error;
+    }
+  }
+
   async deleteSupplier(id) {
-    try { await this._prisma.supplier.delete({ where: { id } }); return true; }
-    catch (error) { if (error?.code === 'P2025') return false; throw error; }
+    try {
+      await this._prisma.supplier.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      if (error?.code === 'P2025') return false;
+      throw error;
+    }
   }
 }
-

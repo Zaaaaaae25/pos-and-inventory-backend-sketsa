@@ -24,6 +24,11 @@ import registerActivityLogContainer from './ActivityLogContainer.js';
 import registerSystemLogContainer from './SystemLogContainer.js';
 import registerPlaceStockContainer from './PlaceStockContainer.js';
 import registerInventoryStockDailyContainer from './InventoryStockDailyContainer.js';
+import registerStockTransferContainer from './StockTransferContainer.js';
+import registerWasteContainer from './WasteContainer.js';
+import registerCashierShiftContainer from './CashierShiftContainer.js';
+import registerPromotionContainer from './PromotionContainer.js';
+import registerPromotionRuleContainer from './PromotionRuleContainer.js';
 import registerTransactionContainer from './TransactionContainer.js';
 
 export default function createContainer(overrides = {}) {
@@ -58,6 +63,11 @@ export default function createContainer(overrides = {}) {
   registerSystemLogContainer({ container: values, overrides, prisma: prismaClient });
   registerPlaceStockContainer({ container: values, overrides, prisma: prismaClient });
   registerInventoryStockDailyContainer({ container: values, overrides, prisma: prismaClient });
+  registerStockTransferContainer({ container: values, overrides, prisma: prismaClient });
+  registerWasteContainer({ container: values, overrides, prisma: prismaClient });
+  registerCashierShiftContainer({ container: values, overrides, prisma: prismaClient });
+  registerPromotionContainer({ container: values, overrides, prisma: prismaClient });
+  registerPromotionRuleContainer({ container: values, overrides, prisma: prismaClient });
   registerTransactionContainer({ container: values, overrides, prisma: prismaClient });
   registerIngredientPackageContainer({ container: values, overrides, prisma: prismaClient });
   registerSupplierContainer({ container: values, overrides, prisma: prismaClient });

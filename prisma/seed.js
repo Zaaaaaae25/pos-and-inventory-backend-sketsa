@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import { buildPermissionCatalog } from '../src/Commons/Constants/PermissionMatrix.js';
 import { hashSecret } from '../src/Commons/Utils/HashPassword.js';
 
 const prisma = new PrismaClient();
@@ -163,78 +164,17 @@ function parseAdditionalPlaceSeeds() {
   }
 }
 
-const permissionCatalog = [
-  {
-    name: 'manage_company_profile',
-    description: 'Manage company profile, subscription, and billing settings.',
-  },
-  {
-    name: 'manage_places',
-    description: 'Create and update place information and operating hours.',
-  },
-  {
-    name: 'manage_staff',
-    description: 'Invite employees and manage their assignments.',
-  },
-  {
-    name: 'manage_roles_permissions',
-    description: 'Configure roles and permission assignments.',
-  },
-  {
-    name: 'manage_menus',
-    description: 'Create, edit, and archive menu items and categories.',
-  },
-  {
-    name: 'manage_inventory',
-    description: 'Track stock levels, perform stock counts, and adjust inventory.',
-  },
-  {
-    name: 'manage_suppliers',
-    description: 'Maintain supplier records and purchasing agreements.',
-  },
-  {
-    name: 'manage_promotions',
-    description: 'Create and control promotions, vouchers, and discounts.',
-  },
-  {
-    name: 'manage_orders',
-    description: 'Handle dine-in, takeaway, and delivery orders.',
-  },
-  {
-    name: 'manage_payments',
-    description: 'Process payments, refunds, and cash reconciliation.',
-  },
-  {
-    name: 'manage_tables',
-    description: 'Manage dining table layout and reservations.',
-  },
-  {
-    name: 'manage_delivery_channels',
-    description: 'Configure delivery partners and online ordering channels.',
-  },
-  {
-    name: 'view_reports',
-    description: 'Access sales, operational, and financial reports.',
-  },
-  {
-    name: 'manage_kitchen_operations',
-    description: 'Control kitchen display systems and production queues.',
-  },
-  {
-    name: 'manage_customer_data',
-    description: 'Maintain customer database and loyalty programs.',
-  },
-];
+const permissionCatalog = buildPermissionCatalog();
 
 const roleDefinitions = [
   {
-    name: 'owner',
-    description: 'Business owner with complete access.',
+    name: 'brand_owner',
+    description: 'Brand owner with complete system access.',
     permissions: permissionCatalog.map((permission) => permission.name),
   },
   {
-    name: 'manager',
-    description: 'Outlet manager responsible for day-to-day operations.',
+    name: 'location_owner',
+    description: 'Location owner overseeing outlet performance and configuration.',
     permissions: [
       'manage_company_profile',
       'manage_places',
@@ -247,21 +187,40 @@ const roleDefinitions = [
       'manage_payments',
       'manage_tables',
       'manage_delivery_channels',
-      'view_reports',
+      'manage_reports',
       'manage_kitchen_operations',
+      'manage_customer_data',
+      'manage_roles_permissions',
+    ],
+  },
+  {
+    name: 'admin',
+    description: 'Administrator managing staff access and master data.',
+    permissions: [
+      'manage_places',
+      'manage_staff',
+      'manage_menus',
+      'manage_inventory',
+      'manage_suppliers',
+      'manage_promotions',
+      'manage_reports',
+      'manage_roles_permissions',
       'manage_customer_data',
     ],
   },
   {
-    name: 'supervisor',
-    description: 'Shift supervisor overseeing service and reporting.',
+    name: 'store_manager',
+    description: 'Store manager handling daily operations.',
     permissions: [
       'manage_orders',
       'manage_payments',
       'manage_tables',
-      'view_reports',
-      'manage_customer_data',
       'manage_kitchen_operations',
+      'manage_menus',
+      'manage_inventory',
+      'manage_suppliers',
+      'manage_customer_data',
+      'manage_reports',
     ],
   },
   {
@@ -282,8 +241,18 @@ const roleDefinitions = [
     ],
   },
   {
-    name: 'waiter',
-    description: 'Front-of-house staff managing tables and orders.',
+    name: 'purchaising',
+    description: 'Staff responsible for procurement and stock replenishment.',
+    permissions: [
+      'manage_inventory',
+      'manage_suppliers',
+      'manage_promotions',
+      'manage_reports',
+    ],
+  },
+  {
+    name: 'waiters',
+    description: 'Front-of-house staff managing tables and customer service.',
     permissions: [
       'manage_orders',
       'manage_tables',
@@ -316,27 +285,69 @@ const placeSeeds = [...defaultPlaceSeeds, ...parseAdditionalPlaceSeeds()];
 
 const defaultAccountSeeds = [
   normalizeAccountSeed({
-    name: envOrDefault('SEED_OWNER_NAME', 'F&B Owner'),
-    role: 'owner',
-    email: envOrDefault('SEED_OWNER_EMAIL', 'owner@example.com'),
-    password: envOrDefault('SEED_OWNER_PASSWORD', 'OwnerPass123!'),
+    name: envOrDefault(
+      'SEED_BRAND_OWNER_NAME',
+      envOrDefault('SEED_OWNER_NAME', 'Brand Owner')
+    ),
+    role: 'brand_owner',
+    email: envOrDefault(
+      'SEED_BRAND_OWNER_EMAIL',
+      envOrDefault('SEED_OWNER_EMAIL', 'brand.owner@example.com')
+    ),
+    password: envOrDefault(
+      'SEED_BRAND_OWNER_PASSWORD',
+      envOrDefault('SEED_OWNER_PASSWORD', 'BrandOwnerPass123!')
+    ),
   }),
   normalizeAccountSeed({
-    name: envOrDefault('SEED_MANAGER_NAME', 'Outlet Manager'),
-    role: 'manager',
-    email: envOrDefault('SEED_MANAGER_EMAIL', 'manager@example.com'),
-    password: envOrDefault('SEED_MANAGER_PASSWORD', 'ManagerPass123!'),
+    name: envOrDefault(
+      'SEED_LOCATION_OWNER_NAME',
+      envOrDefault('SEED_MANAGER_NAME', 'Location Owner')
+    ),
+    role: 'location_owner',
+    email: envOrDefault(
+      'SEED_LOCATION_OWNER_EMAIL',
+      envOrDefault('SEED_MANAGER_EMAIL', 'location.owner@example.com')
+    ),
+    password: envOrDefault(
+      'SEED_LOCATION_OWNER_PASSWORD',
+      envOrDefault('SEED_MANAGER_PASSWORD', 'LocationOwnerPass123!')
+    ),
   }),
   normalizeAccountSeed({
-    name: envOrDefault('SEED_SUPERVISOR_NAME', 'Shift Supervisor'),
-    role: 'supervisor',
-    email: envOrDefault('SEED_SUPERVISOR_EMAIL', 'supervisor@example.com'),
-    password: envOrDefault('SEED_SUPERVISOR_PASSWORD', 'SupervisorPass123!'),
+    name: envOrDefault('SEED_ADMIN_NAME', 'Administrator'),
+    role: 'admin',
+    email: envOrDefault('SEED_ADMIN_EMAIL', 'admin@example.com'),
+    password: envOrDefault('SEED_ADMIN_PASSWORD', 'AdminPass123!'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_STORE_MANAGER_NAME', 'Store Manager'),
+    role: 'store_manager',
+    email: envOrDefault('SEED_STORE_MANAGER_EMAIL', 'store.manager@example.com'),
+    password: envOrDefault('SEED_STORE_MANAGER_PASSWORD', 'StoreManagerPass123!'),
   }),
   normalizeAccountSeed({
     name: envOrDefault('SEED_CASHIER_NAME', 'Cashier A'),
     role: 'cashier',
     pin: envOrDefault('SEED_CASHIER_PIN', '123456'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_CHEF_NAME', 'Kitchen Chef'),
+    role: 'chef',
+    email: envOrDefault('SEED_CHEF_EMAIL', 'chef@example.com'),
+    password: envOrDefault('SEED_CHEF_PASSWORD', 'ChefPass123!'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_PURCHAISING_NAME', 'Purchaising Staff'),
+    role: 'purchaising',
+    email: envOrDefault('SEED_PURCHAISING_EMAIL', 'purchaising@example.com'),
+    password: envOrDefault('SEED_PURCHAISING_PASSWORD', 'PurchaisingPass123!'),
+  }),
+  normalizeAccountSeed({
+    name: envOrDefault('SEED_WAITERS_NAME', 'Head Waiter'),
+    role: 'waiters',
+    email: envOrDefault('SEED_WAITERS_EMAIL', 'waiters@example.com'),
+    password: envOrDefault('SEED_WAITERS_PASSWORD', 'WaitersPass123!'),
   }),
 ].filter(Boolean);
 
@@ -797,8 +808,12 @@ async function main() {
   // Only insert sample logs when table is empty to keep the seed idempotent
   const activityLogCount = await prisma.activityLog.count();
   if (activityLogCount === 0) {
-    // Try to attach to an existing seeded user (owner)
-    const ownerUser = await prisma.user.findFirst({ where: { email: 'owner@example.com' } });
+    // Try to attach to an existing seeded user (brand owner)
+    const brandOwnerEmail = envOrDefault(
+      'SEED_BRAND_OWNER_EMAIL',
+      envOrDefault('SEED_OWNER_EMAIL', 'brand.owner@example.com')
+    )?.toLowerCase();
+    const ownerUser = await prisma.user.findFirst({ where: { email: brandOwnerEmail } });
     const uid = ownerUser?.id ?? null;
 
     const alSeeds = [
